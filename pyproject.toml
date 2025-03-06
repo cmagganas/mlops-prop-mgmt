@@ -5,7 +5,7 @@
 [project]
 name = "mlops-prop-mgmt"
 description = "My package description"
-authors = [{ name = "<your name>", email = "some-email@gmail.com" }]
+authors = [{ name = "Christos", email = "cmagganas@gmail.com" }]
 readme = "README.md"
 requires-python = ">=3.7"
 license = { text = "MIT" }

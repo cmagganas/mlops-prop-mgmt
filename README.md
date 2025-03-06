@@ -24,7 +24,7 @@ You will need the following installed on your machine to develop on this codebas
 
 ```bash
 # clone the repo
-git clone https://github.com/<your github username>/mlops-prop-mgmt.git
+git clone https://github.com/cmagganas/mlops-prop-mgmt.git
 
 # install the dev dependencies
 make install
