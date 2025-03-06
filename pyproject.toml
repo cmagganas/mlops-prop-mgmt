@@ -4,14 +4,28 @@
 
 [project]
 name = "mlops-prop-mgmt"
-description = "My package description"
+description = "Property Management Platform for tracking tenants, properties, payments, and expenses"
 authors = [{ name = "Christos", email = "cmagganas@gmail.com" }]
 readme = "README.md"
 requires-python = ">=3.7"
 license = { text = "MIT" }
-dependencies = []
+dependencies = [
+    "fastapi>=0.103.0",
+    "uvicorn>=0.23.2",
+    "sqlalchemy>=2.0.0",
+    "pydantic>=2.3.0",
+    "python-jose>=3.3.0",
+    "python-dotenv>=1.0.0",
+    "alembic>=1.12.0",
+    "python-multipart>=0.0.6",
+    "boto3>=1.28.0",
+    "httpx>=0.24.0",
+    "asyncpg>=0.28.0",
+    "passlib>=1.7.4",
+    "requests>=2.31.0",
+]
 classifiers = ["Programming Language :: Python :: 3"]
-keywords = ["one", "two"]
+keywords = ["property management", "fastapi", "aws"]
 
 # version will be derived dynamically from version.txt via setuptools
 dynamic = ["version"]
@@ -22,7 +36,7 @@ version = { file = "version.txt" }
 
 # optional dependencies can be installed with square brackets, e.g. `pip install my-package[test,static-code-qa]`
 [project.optional-dependencies]
-test = ["pytest", "pytest-cov"]
+test = ["pytest", "pytest-cov", "pytest-asyncio"]
 release = ["build", "twine"]
 static-code-qa = [
     "pre-commit",
