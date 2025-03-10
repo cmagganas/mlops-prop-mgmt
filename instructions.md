@@ -62,6 +62,7 @@ Stack:
   - Example: $1000 Jan paid - $1000 Jan owed - $1000 Feb owed = $1000 total owed
 
 ### Relationships
+- **Payment to tenant mapping**
 - **Tenant to unit mapping**
 - **Unit to property mapping**
 
@@ -80,9 +81,6 @@ Stack:
 - **Property Details**
   - Property ID (primary key)
   - Address (street, city, state, zip)
-  - Acquisition date
-  - Purchase price
-  - Current valuation
   - Property type (single family, multi-family, commercial)
   - Year built
   - Square footage
@@ -120,6 +118,7 @@ Stack:
 ### Relationships
 - One property has many units (1:N)
 - One unit has one or more tenants (1:N)
+- One tenant has one or more payments (1:N)
 
 ## Feature 3: Rent Lease Creation
 
@@ -156,9 +155,18 @@ Stack:
 - Version tracking
 - Signature tracking
 
+## UI
+- sign in with email
+- see dashboard, where you can look at tenants
+  - billing per tenant
+    - outstanding balance
+    - their payments
+  - maintenance requests per property
+  - expense tracking per property
+
 # Authentication Flow
 
-```
+```mermaid
 sequenceDiagram
     participant User
     participant FastAPI
@@ -178,4 +186,22 @@ sequenceDiagram
     FastAPI->>FastAPI: Verify JWT Signature using JWKS
     FastAPI->>FastAPI: Decode JWT, check expiration, verify claims
     FastAPI->>User: Return protected resource if valid
-``` 
+```
+
+
+# Documentation
+
+## AWS Cognito
+CognitoIdentityProvider
+https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/cognito-idp.html
+```python
+import boto3
+client = boto3.client('cognito-idp')
+```
+
+## FastAPI
+
+## AWS Lambda
+
+## AWS API Gateway
+

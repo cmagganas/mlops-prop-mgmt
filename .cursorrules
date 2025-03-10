@@ -1,0 +1,728 @@
+
+  You are an expert in Python, FastAPI, and scalable API development.
+  
+  Key Principles
+  - Write concise, technical responses with accurate Python examples.
+  - Use functional, declarative programming; avoid classes where possible.
+  - Prefer iteration and modularization over code duplication.
+  - Use descriptive variable names with auxiliary verbs (e.g., is_active, has_permission).
+  - Use lowercase with underscores for directories and files (e.g., routers/user_routes.py).
+  - Favor named exports for routes and utility functions.
+  - Use the Receive an Object, Return an Object (RORO) pattern.
+  
+  Python/FastAPI
+  - Use def for pure functions and async def for asynchronous operations.
+  - Use type hints for all function signatures. Prefer Pydantic models over raw dictionaries for input validation.
+  - File structure: exported router, sub-routes, utilities, static content, types (models, schemas).
+  - Avoid unnecessary curly braces in conditional statements.
+  - For single-line statements in conditionals, omit curly braces.
+  - Use concise, one-line syntax for simple conditional statements (e.g., if condition: do_something()).
+  
+  Error Handling and Validation
+  - Prioritize error handling and edge cases:
+    - Handle errors and edge cases at the beginning of functions.
+    - Use early returns for error conditions to avoid deeply nested if statements.
+    - Place the happy path last in the function for improved readability.
+    - Avoid unnecessary else statements; use the if-return pattern instead.
+    - Use guard clauses to handle preconditions and invalid states early.
+    - Implement proper error logging and user-friendly error messages.
+    - Use custom error types or error factories for consistent error handling.
+  
+  Dependencies
+  - FastAPI
+  - Pydantic v2
+  - Async database libraries
+  
+  FastAPI-Specific Guidelines
+  - Use functional components (plain functions) and Pydantic models for input validation and response schemas.
+  - Use declarative route definitions with clear return type annotations.
+  - Use def for synchronous operations and async def for asynchronous ones.
+  - Minimize @app.on_event("startup") and @app.on_event("shutdown"); prefer lifespan context managers for managing startup and shutdown events.
+  - Use middleware for logging, error monitoring, and performance optimization.
+  - Optimize for performance using async functions for I/O-bound tasks, caching strategies, and lazy loading.
+  - Use HTTPException for expected errors and model them as specific HTTP responses.
+  - Use middleware for handling unexpected errors, logging, and error monitoring.
+  - Use Pydantic's BaseModel for consistent input/output validation and response schemas.
+  
+  Performance Optimization
+  - Minimize blocking I/O operations; use asynchronous operations for all database calls and external API requests.
+  - Implement caching for static and frequently accessed data using tools like Redis or in-memory stores.
+  - Optimize data serialization and deserialization with Pydantic.
+  - Use lazy loading techniques for large datasets and substantial API responses.
+  
+  Key Conventions
+  1. Rely on FastAPI’s dependency injection system for managing state and shared resources.
+  2. Prioritize API performance metrics (response time, latency, throughput).
+  3. Limit blocking operations in routes:
+     - Favor asynchronous and non-blocking flows.
+     - Use dedicated async functions for database and external API operations.
+     - Structure routes and dependencies clearly to optimize readability and maintainability.
+  
+  Refer to FastAPI documentation for Data Models, Path Operations, and Middleware for best practices.
+  
+---
+
+# API Design Checklist - 12-factor App
+
+The state of the code at this point includes
+
+- The `create_app()` factory pattern
+- Use of `APIRouter` and `request.app.state` to declares the routes in their own file
+- Use of `pydantic-settings` for configuration management
+
+## 12-factor app (https://12factor.net/)
+
+- [ ] 1. **Codebase** - use version control. One codebase, many deploys.
+- [ ] 2. **Dependenices** - explicitly declare and isolate dependencies
+  - [ ] Declare unpinned dependencies. Prefer `pyproject.toml` to `requirements.txt`.
+  - [ ] (Optional) lock dependenices in a text format, e.g. `requirements.lock.txt` with `pip-tools`
+  - [ ] Isolate dependencies using a virtual environment
+- [ ] 3. **Config** - Use environment variables for configuration
+- [ ] 4. **Backing services** - Treat backing services as attached resources
+  - [ ] Store connection information such as URLs, credentials, etc. in the config
+- [ ] 5. **Build, release, run** - Strictly separate build and run stages
+  - [ ] Build a deployable artifact, e.g. a Docker image or AWS Lambda package
+  - [ ] Release the artifact to a runtime environment, e.g. AWS ECS or AWS Lambda
+  - [ ] Run the artifact in a runtime environment
+- [ ] 6. **Processes** - Execute the app as one or more stateless processes
+  - [ ] Do NOT store state in the application (covered by REST)
+  - [ ] DO Store state in a backing service, e.g. a database
+- [ ] 7. **Port binding** - Export services via port binding
+  - [ ] Use a web server to bind to a port and serve the application
+- [ ] 8. **Concurrency** - Scale out via the process model (horizontally)
+  - [ ] Use a reverse proxy or API Gateway to handle multiple instances of the application
+- [ ] 9. **Disposability** - Maximize robustness with fast startup and graceful shutdown ("treat deployments/hardware as cattle, not pets")
+  - [ ] Use a reverse proxy or API Gateway to handle graceful shutdown (if applicable)
+- [ ] 10. **(Not talked about in this section)** **Dev/prod parity** - Keep development, staging, and production as similar as possible
+- [ ] 11. **(Not talked about in this section)** **Logs** - Treat logs as event streams
+  - [ ] Log to stdout/stderr
+  - [ ] Use a log aggregator, e.g. AWS CloudWatch, to collect logs
+- [ ] 12. **(Not talked about in this section)** **Admin processes** - Run admin/management tasks as one-off processes
+
+## Extra
+
+- [ ] Decide if you will version your API endpoints in code or at the API Gateway level
+- [ ] Config (`pydantic.BaseSettings` is excellent for this)
+  - [ ] Validate configuration
+  - [ ] Support any or all of the following config sources in the following order of precedence: (note that often, only implementing environment variables is sufficient, but for widely adopted, large, or complex applications, supporting other config sources is helpful)
+    - 1. CLI arguments (highest precedence)
+    - 2. Environment variables
+    - 3. Config files, e.g. JSON, YAML, TOML
+    - 4. Defaults, constant or derived values in code (lowest precedence)
+
+## Beyond this course
+
+- [ ] Decide if authentication is needed--prefer keeping it out of the application and using a reverse proxy or API Gateway to handle authentication
+- [ ] Support authorization within the application, e.g. using OAuth 2.0 JWT scopes
+- [ ] Support multitenancy
+
+# API Design Checklist - Error Handling
+
+## Implement HTTP
+
+- [ ] Return error HTTP status codes. [FastAPI Guide](https://fastapi.tiangolo.com/tutorial/handling-errors/#raise-an-httpexception-in-your-code)
+
+## Error handling
+
+**Principle:** NEVER let your API crash. Always handle exceptions and return a meaningful client-facing response to the client that
+
+- helps them understand what went wrong and how to fix it
+- does not reveal internal implementation details of the API
+
+---
+
+- [ ] Globally catch errors and return a meaningful response to the user. [FastAPI Guide](https://fastapi.tiangolo.com/tutorial/handling-errors/#install-custom-exception-handlers)
+  - [ ] Catch `pydantic.ValidationError` as `422 Unprocessable Entity`
+  - [ ] Catch `Exception` as `500 Internal Server Error` (as of this writing, FastAPI does not provide a way to catch broad exceptions the same way as other types, see reference code)
+- [ ] In error messages, do not reveal implementation details to the user about what went wrong. 
+  - **Bad:** `"the file was not found in the S3 bucket at path <...>".` (mentions S3)
+  - **Good:** `"the file requested was not found at path <...>."`
+- [ ] **(not in this section)** Include a request ID in error messages to give to "the support team" (you). Include it in logs.
+- [ ] Unit test that the correct status codes and responses are returned in error cases
+
+## Data validation
+
+**Principle:** assume all API inputs are malicious until proven otherwise.
+
+- [ ] Validate API inputs
+  - [ ] Query parameters (for appropriate HTTP methods)
+  - [ ] Request body (for appropriate HTTP methods)
+  - [ ] Request headers
+  - [ ] Path parameters
+- [ ] Unit test validation logic
+
+Use Pydantic models wherever possible.
+
+1. [ ] Prefer JSON schema validation wherever possible, e.g.
+   ```python
+    class GetPeopleRequest(BaseModel):
+        min_age: int = Field(..., gt=0)
+    ```
+2. [ ] Use Pydantic validators for more complex validation. [model_validator guide](https://docs.pydantic.dev/latest/concepts/validators/#model-validators)
+   ```python
+    class GetPeopleRequest(BaseModel):
+        min_age: int = Field(..., gt=0)
+        max_age: int = Field(..., lt=100) # no one makes it to 100
+        
+        @model_validator(mode="before")
+        def validate_age_range(cls, values: dict):
+            if values["min_age"] > values["max_age"]:
+                raise ValueError("min_age must be less than or equal to max_age")
+    ```
+
+
+# API Design Checklist - Document your API Contract
+
+An API contract is a formal agreement between the API provider and the API consumer. It defines the expected behavior of the API including the endpoints, request/response formats, and error handling.
+
+Your contract should be so thoroughly described that the API development team and client development teams (web devs, mobile devs, other internal teams, etc.) can begin developing their clients and the API *before the API has been developed*.
+
+Design effort and simplicity of user experience are inversely related.
+
+The achieve a simple API UX, you need to put in a lot of API design effort. Changes to the contract
+
+OpenAPI, formerly known as Swagger, is a specification for documenting HTTP APIs, including REST APIs.
+
+## Document your API contract
+
+**Principle:** include as much detail as you can in your OpenAPI spec so that
+
+1. Users can understand your endpoints without needing to hit the API
+2. Client and server code generated from the OpenAPI spec has good
+   1. autocompletion - for **types** and **descriptions**
+   2. function and model names
+   3. organization, i.e. functions are grouped
+
+Use OpenAPI to document your API. Include:
+
+- [ ] API-level metadata
+  - [ ] A title
+  - [ ] A client-facing, markdown description of the API that does not expose imlementation details
+  - [ ] API version (ideally the semantic version)
+  ```python
+  app = FastAPI(
+      title="Pet Store API",
+      description="Update and retrieve pet information",
+      version=__version__  # e.g. "0.1.0"
+  )
+  ```
+
+- [ ] For every **API route**
+  - [ ] Add a client-facing markdown docstring that does not discuss internal implementation details. [FastAPI guide](https://fastapi.tiangolo.com/advanced/path-operation-advanced-configuration/#advanced-description-from-docstring)
+  - [ ] Document the request inputs
+    - [ ] Payload (if applicable for the HTTP method), [FastAPI guide](https://fastapi.tiangolo.com/tutorial/body/)
+    - [ ] Query parameters, [FastAPI guide](https://fastapi.tiangolo.com/tutorial/query-params-str-validations/)
+    - [ ] Request headers, [FastAPI guide](https://fastapi.tiangolo.com/tutorial/header-params/)
+  - [ ] For every response HTTP status code [FastAPI guide](https://fastapi.tiangolo.com/advanced/additional-responses/), [OpenAPI guide](https://swagger.io/docs/specification/describing-responses/)
+    - [ ] Document the response model(s)
+    - [ ] Document notable response headers
+    - [ ] Document the content ([MIME](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types)) type(s)
+    - [ ] Include at least one example response
+      ```python
+      class PutFileResponse(BaseModel):
+          """Response model for `PUT /files/:filePath`."""
+          success: bool
+          message: str
+      
+          model_config = ConfigDict(
+            json_schema_extra={"examples": [
+              {"success": True, 
+              "message": "File uploaded successfully"}]
+            }
+          )
+      ```
+
+- **Schemas** (pydantic models in request/response)
+  - [ ] Decide if you will use `snake_case` or `camelCase` in JSON request/response payloads. 
+    - Be consistent and stick to one
+    - Useful: `pydantic.alias_generators.to_camel` in `model_config`, [Pydantic guide](https://docs.pydantic.dev/latest/api/config/#pydantic.config.ConfigDict.loc_by_alias)
+  - [ ] Include a docstring in each Pydantic Model
+    ```python
+    class PutFileResponse(BaseModel):
+        """Response model for `PUT /files/:filePath`."""
+    ```
+  - [ ] Include a description for each field 
+    ```python
+    Field(..., description="...")
+    ```
+- [ ] Give each endpoint a unique "operation ID". This influences the function name in the generated client/server code. [FastAPI Guide 1](https://fastapi.tiangolo.com/advanced/path-operation-advanced-configuration/#using-the-path-operation-function-name-as-the-operationid)
+  ```python
+  @app.get("/files/{file_path}", operation_id="get_file")
+  def get_file(file_path: str):
+      ...
+  ```
+- [ ] Use tags to group endpoints. Influences the module/folder functions are grouped in in the generated client/server code.
+  ```python
+  ROUTER = APIRouter(tags=["files"])
+
+  ROUTER.get("/files/{file_path}", ...)
+  def get_file(file_path: str):
+      ...
+  ```
+- [ ] If you are going to put version numbers in your routes, do NOT use full semantic versions, e.g. `GET /v1.0.0/files`. This would require to you to update your routes at each release, which requires a code change in all existing API clients. Instead, prefer the major version number only, e.g. `GET /v1/files`. There are pro's and con's to declaring routes in code vs. at the API Gateway level.
+- [ ] **(not covered in this section)** Keep base URLs stable, e.g. use a registered domain name rather than an autogenerated AWS-created URL
+
+
+# Trunk-based Development workflow for detecting breaking API changes
+
+`oasdiff` is a tool that can diff two `openapi.json` schema files and detect breaking changes.
+
+```mermaid
+stateDiagram
+    s1 : create branch from main
+    s2 : make changes to FastAPI in<br/>any of src/**/*.py
+    s3 : regenerate openapi.json<br/>to reflect your changes
+    s4 : commit openapi.json
+    s5 : pass linting and <br/>tests, push, and<br/>open a PR to main
+    s6 : CI is triggered
+    s7 : CI regenerates the openapi.json<br/>from the code on the feature branch
+    s8 : CI checks to see if the generated<br/>openapi.json is same as committed
+    s9 : retrieve main/openapi.json
+    s10 : CI executes oasdiff comparing<br/>main/openapi.json to feat/branch/openapi.json
+    s11 : the build passes ✅
+    s12 : the build fails ❌
+    s13 : 💬 Decide if breaking changes are<br/>intentional and clients have had<br/>sufficient warning
+    s15 : merge the PR! 🎉
+
+    s1 --> s2
+    s2 --> s3
+    s3 --> s4
+    s4 --> s5
+    s5 --> s6
+    s6 --> s7
+    s7 --> s8
+    s8 --> s3 : if no, then you<br/> didn't do this step.<br/>Go do it!
+    s8 --> s9 : if yes
+    s9 --> s10
+    s10 --> s11 : if no breaking <br/>changes detected
+    s10 --> s12 : if breaking changes detected
+    s11 --> s15
+    s12 --> s13
+    s13 --> s15 : if yes, then override
+    s13 --> s2 : if no, go back and<br/>fix the breaking changes
+    s15 --> [*]
+
+
+```
+
+Use `uv`
+
+# uv
+
+[![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
+[![image](https://img.shields.io/pypi/v/uv.svg)](https://pypi.python.org/pypi/uv)
+[![image](https://img.shields.io/pypi/l/uv.svg)](https://pypi.python.org/pypi/uv)
+[![image](https://img.shields.io/pypi/pyversions/uv.svg)](https://pypi.python.org/pypi/uv)
+[![Actions status](https://github.com/astral-sh/uv/actions/workflows/ci.yml/badge.svg)](https://github.com/astral-sh/uv/actions)
+[![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?logo=discord&logoColor=white)](https://discord.gg/astral-sh)
+
+An extremely fast Python package and project manager, written in Rust.
+
+<p align="center">
+  <picture align="center">
+    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/astral-sh/uv/assets/1309177/03aa9163-1c79-4a87-a31d-7a9311ed9310">
+    <source media="(prefers-color-scheme: light)" srcset="https://github.com/astral-sh/uv/assets/1309177/629e59c0-9c6e-4013-9ad4-adb2bcf5080d">
+    <img alt="Shows a bar chart with benchmark results." src="https://github.com/astral-sh/uv/assets/1309177/629e59c0-9c6e-4013-9ad4-adb2bcf5080d">
+  </picture>
+</p>
+
+<p align="center">
+  <i>Installing <a href="https://trio.readthedocs.io/">Trio</a>'s dependencies with a warm cache.</i>
+</p>
+
+## Highlights
+
+- 🚀 A single tool to replace `pip`, `pip-tools`, `pipx`, `poetry`, `pyenv`, `twine`, `virtualenv`,
+  and more.
+- ⚡️ [10-100x faster](https://github.com/astral-sh/uv/blob/main/BENCHMARKS.md) than `pip`.
+- 🗂️ Provides [comprehensive project management](#projects), with a
+  [universal lockfile](https://docs.astral.sh/uv/concepts/projects/layout#the-lockfile).
+- ❇️ [Runs scripts](#scripts), with support for
+  [inline dependency metadata](https://docs.astral.sh/uv/guides/scripts#declaring-script-dependencies).
+- 🐍 [Installs and manages](#python-versions) Python versions.
+- 🛠️ [Runs and installs](#tools) tools published as Python packages.
+- 🔩 Includes a [pip-compatible interface](#the-pip-interface) for a performance boost with a
+  familiar CLI.
+- 🏢 Supports Cargo-style [workspaces](https://docs.astral.sh/uv/concepts/projects/workspaces) for
+  scalable projects.
+- 💾 Disk-space efficient, with a [global cache](https://docs.astral.sh/uv/concepts/cache) for
+  dependency deduplication.
+- ⏬ Installable without Rust or Python via `curl` or `pip`.
+- 🖥️ Supports macOS, Linux, and Windows.
+
+uv is backed by [Astral](https://astral.sh), the creators of
+[Ruff](https://github.com/astral-sh/ruff).
+
+## Installation
+
+Install uv with our standalone installers:
+
+```bash
+# On macOS and Linux.
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+```bash
+# On Windows.
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+Or, from [PyPI](https://pypi.org/project/uv/):
+
+```bash
+# With pip.
+pip install uv
+```
+
+```bash
+# Or pipx.
+pipx install uv
+```
+
+If installed via the standalone installer, uv can update itself to the latest version:
+
+```bash
+uv self update
+```
+
+See the [installation documentation](https://docs.astral.sh/uv/getting-started/installation/) for
+details and alternative installation methods.
+
+## Documentation
+
+uv's documentation is available at [docs.astral.sh/uv](https://docs.astral.sh/uv).
+
+Additionally, the command line reference documentation can be viewed with `uv help`.
+
+## Features
+
+### Projects
+
+uv manages project dependencies and environments, with support for lockfiles, workspaces, and more,
+similar to `rye` or `poetry`:
+
+```console
+$ uv init example
+Initialized project `example` at `/home/user/example`
+
+$ cd example
+
+$ uv add ruff
+Creating virtual environment at: .venv
+Resolved 2 packages in 170ms
+   Built example @ file:///home/user/example
+Prepared 2 packages in 627ms
+Installed 2 packages in 1ms
+ + example==0.1.0 (from file:///home/user/example)
+ + ruff==0.5.0
+
+$ uv run ruff check
+All checks passed!
+
+$ uv lock
+Resolved 2 packages in 0.33ms
+
+$ uv sync
+Resolved 2 packages in 0.70ms
+Audited 1 package in 0.02ms
+```
+
+See the [project documentation](https://docs.astral.sh/uv/guides/projects/) to get started.
+
+uv also supports building and publishing projects, even if they're not managed with uv. See the
+[publish guide](https://docs.astral.sh/uv/guides/publish/) to learn more.
+
+### Scripts
+
+uv manages dependencies and environments for single-file scripts.
+
+Create a new script and add inline metadata declaring its dependencies:
+
+```console
+$ echo 'import requests; print(requests.get("https://astral.sh"))' > example.py
+
+$ uv add --script example.py requests
+Updated `example.py`
+```
+
+Then, run the script in an isolated virtual environment:
+
+```console
+$ uv run example.py
+Reading inline script metadata from: example.py
+Installed 5 packages in 12ms
+<Response [200]>
+```
+
+See the [scripts documentation](https://docs.astral.sh/uv/guides/scripts/) to get started.
+
+### Tools
+
+uv executes and installs command-line tools provided by Python packages, similar to `pipx`.
+
+Run a tool in an ephemeral environment using `uvx` (an alias for `uv tool run`):
+
+```console
+$ uvx pycowsay 'hello world!'
+Resolved 1 package in 167ms
+Installed 1 package in 9ms
+ + pycowsay==0.0.0.2
+  """
+
+  ------------
+< hello world! >
+  ------------
+   \   ^__^
+    \  (oo)\_______
+       (__)\       )\/\
+           ||----w |
+           ||     ||
+```
+
+Install a tool with `uv tool install`:
+
+```console
+$ uv tool install ruff
+Resolved 1 package in 6ms
+Installed 1 package in 2ms
+ + ruff==0.5.0
+Installed 1 executable: ruff
+
+$ ruff --version
+ruff 0.5.0
+```
+
+See the [tools documentation](https://docs.astral.sh/uv/guides/tools/) to get started.
+
+### Python versions
+
+uv installs Python and allows quickly switching between versions.
+
+Install multiple Python versions:
+
+```console
+$ uv python install 3.10 3.11 3.12
+Searching for Python versions matching: Python 3.10
+Searching for Python versions matching: Python 3.11
+Searching for Python versions matching: Python 3.12
+Installed 3 versions in 3.42s
+ + cpython-3.10.14-macos-aarch64-none
+ + cpython-3.11.9-macos-aarch64-none
+ + cpython-3.12.4-macos-aarch64-none
+```
+
+Download Python versions as needed:
+
+```console
+$ uv venv --python 3.12.0
+Using Python 3.12.0
+Creating virtual environment at: .venv
+Activate with: source .venv/bin/activate
+
+$ uv run --python pypy@3.8 -- python --version
+Python 3.8.16 (a9dbdca6fc3286b0addd2240f11d97d8e8de187a, Dec 29 2022, 11:45:30)
+[PyPy 7.3.11 with GCC Apple LLVM 13.1.6 (clang-1316.0.21.2.5)] on darwin
+Type "help", "copyright", "credits" or "license" for more information.
+>>>>
+```
+
+Use a specific Python version in the current directory:
+
+```console
+$ uv python pin 3.11
+Pinned `.python-version` to `3.11`
+```
+
+See the [Python installation documentation](https://docs.astral.sh/uv/guides/install-python/) to get
+started.
+
+### The pip interface
+
+uv provides a drop-in replacement for common `pip`, `pip-tools`, and `virtualenv` commands.
+
+uv extends their interfaces with advanced features, such as dependency version overrides,
+platform-independent resolutions, reproducible resolutions, alternative resolution strategies, and
+more.
+
+Migrate to uv without changing your existing workflows — and experience a 10-100x speedup — with the
+`uv pip` interface.
+
+Compile requirements into a platform-independent requirements file:
+
+```console
+$ uv pip compile docs/requirements.in \
+   --universal \
+   --output-file docs/requirements.txt
+Resolved 43 packages in 12ms
+```
+
+Create a virtual environment:
+
+```console
+$ uv venv
+Using Python 3.12.3
+Creating virtual environment at: .venv
+Activate with: source .venv/bin/activate
+```
+
+Install the locked requirements:
+
+```console
+$ uv pip sync docs/requirements.txt
+Resolved 43 packages in 11ms
+Installed 43 packages in 208ms
+ + babel==2.15.0
+ + black==24.4.2
+ + certifi==2024.7.4
+ ...
+```
+
+---
+
+
+Use case context:
+"""
+Property Management Cloud Platform Demo Project
+
+Use Case Overview:
+The current property management workflow relies on multiple disconnected tools and manual processes, making it inefficient and difficult to track key information. The existing system includes:
+
+Accounting: Quicken for expenses and income tracking.
+
+Leases: Stored in Dropbox, with lease templates reused from previous versions.
+
+1. Lease Generator, using variables from spreadsheet values.
+
+2. Tenant Payment Tracking: Managed through spreadsheets and paper documents.
+
+Maintenance Management: Conducted via phone calls and text messages, lacking a centralized tracking system.
+
+External Communication: Conducted through email for contractors, city documentation, and official correspondence.
+
+Advertising & Tenant Screening:
+
+Listings posted on Craigslist, Zillow, and similar platforms.
+
+Email and Google Voice used for scheduling showings.
+
+Tenant screening conducted through Tenant Alert.
+
+Project Goals for the Two-Week Demo:
+This project aims to create a cloud-based platform that streamlines key property management functions using AWS and related technologies learned in the cloud engineering course. The core objectives include:
+
+Tenant Payment Tracking System:
+
+Generate reports to track rent payments, outstanding balances, and additional charges.
+
+Organize data by tenant, unit, and property, supporting one-to-many relationships (e.g., multiple units per property, multiple tenants per unit).
+
+Provide visibility into payment history and due balances at different levels (tenant, unit, and property).
+
+3. Expense Tracking System:
+
+Enable easy upload of receipts and check images.
+
+Capture details such as date, check number, payee, memo, amount, and additional notes.
+
+Design the system for ease of use, allowing non-technical users (e.g., family members) to upload and track expenses efficiently.
+
+Cloud Platform Implementation:
+
+Develop a login-based platform for managing property data.
+
+Leverage AWS services, including Lambda, FastAPI, API Gateway, and S3, for secure file uploads and storage.
+
+Align project implementation with the cloud engineering course's learning outcomes, ensuring practical application of the tools and methodologies covered.
+"""
+
+Lucid Chart System Architecture Context:
+```
+UI
+
+sign in with email
+see dashboard, where you can look at tenants
+billing per tenant
+outstanding balance
+their payments
+maintenance requests per property
+expense tracking per property
+Entity Relationship Diagram
+Properties
+Units
+1:many
+Tenant- name- 
+Payment- name- 
+1:many
+1:many
+
+User's Browser
+API Gateway
+Gradio/FastAPI in Lambda
+Rent
+Important Spreadsheets
+selectproperty
+(dropdown) Select Tenant
+Assignments
+
+Step 1
+
+Entity Relationship Diagram
+Decide what actions you want to do to those entities
+Payments?
+Submit a payment
+Can add an image
+Edit a payment
+Delete a payment?
+UI (mockup)
+...
+
+Step 2
+
+Decide Gradio or JS
+
+If gradio: do a quick POC
+ - deploy a gradio app on lambda
+ - try to add Cogito "Authorization Code Flow" grant type (the login flow with JWTs)
+
+If JS
+copy/paste the minecraft PaaS (awscdk-minecraft); get the slimmest version of this running that you possibly can
+start to fill it in with your pages / logic
+GET /dashboard (no token)
+Cognito Hosted UI
+Return 301 Redirect: /login
+GET /login (no token)
+
+
+
+Return 301 Redirect: cognito login page URL
+If login successful, redirect back to app
+GET /login?token=<the new jwt>
+
+
+
+
+sequenceDiagram
+    participant User
+    participant FastAPI
+    participant Cognito
+    User->>FastAPI: GET /login
+    FastAPI->>User: Redirect to Cognito Login
+    User->>Cognito: GET /oauth2/authorize?client_id=CLIENT_ID&response_type=code&redirect_uri=REDIRECT_URI
+    Cognito->>User: Redirect to /callback?code=AUTH_CODE
+    User->>FastAPI: GET /callback?code=AUTH_CODE
+    FastAPI->>Cognito: POST /oauth2/token (exchange AUTH_CODE)
+    Cognito->>FastAPI: {access_token, id_token} (JWTs)
+    FastAPI->>User: Set HttpOnly Cookie {id_token} (JWT stored)
+    
+    User->>FastAPI: GET /protected (includes Cookie with id_token)
+    FastAPI->>Cognito: GET /.well-known/jwks.json (fetch public keys)
+    Cognito->>FastAPI: {JWKS Keys}
+    FastAPI->>FastAPI: Verify JWT Signature using JWKS
+    FastAPI->>FastAPI: Decode JWT, check expiration, verify claims
+    FastAPI->>User: Return protected resource if valid
+
+Backend API that serves the frontend HTML
+Frontend
+
+Backend API
+```
