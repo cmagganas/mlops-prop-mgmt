@@ -20,7 +20,7 @@ You will need the following installed on your machine to develop on this codebas
 - Python 3.7+, ideally using `pyenv` to easily change between Python versions
 - `git`
 
-### 
+### Install
 
 ```bash
 # clone the repo

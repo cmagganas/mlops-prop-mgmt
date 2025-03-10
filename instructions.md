@@ -1,36 +1,41 @@
-# Project Overview
+# INSTRUCTIONS FOR CURSOR
+
+## Project Overview
+
 You are building a property management platform for a small family business for rental units in multifamily residential buildings. The platform should have role based access control with username (email) and password (forgot password goes to email). Admin accounts control all things, managers can add info and make changes, assistants can only add information and have limited visibility of information and properties. No tenant/renter portal access at this time.
 
 (Ideally things the solo dev understands well and easy to maintain)
 Stack:
+
 - Python (business logic)
 - FastAPI
-- Frontend: NextJS 14, shadcn, tailwind, Lucid Icon https://youtu.be/2PjmPU07KNs?feature=shared&t=243
+- Frontend: NextJS 14, shadcn, tailwind, Lucid Icon <https://youtu.be/2PjmPU07KNs?feature=shared&t=243>
 - Alternate Frontend: Flask
 
-# Core Functionalities
+## Core Functionalities
 
-* Upload one/many rental deposit transactions
-   * Transaction should include [tenant, unit, property, date, amount, term, type]
-* Table of Properties
-* Table of Owners/Admin
-* Table of Tenants:
-   * [name, contact_info, type (past, present future), unit, property]
-* Tables for each property which includes rows with:
-   * [unit, property, occupancy_status, tenants, lease_term, rent_amount, type]
-* Expense tracker, upload expenses and assign to each property
-   * [date, type, payee, memo, category, property, amount]
-* Reports:
-   * RentalTracker: balance of all tenants by property, filter by property and balance (past due over threshold e.g. > 1 month or $X)
-   * ExpenseTracker: expenses filtered by [property, payee, category, year, month]
-   * TaskTracker: kanban and/or calendar or tasks to do
+- Upload one/many rental deposit transactions
+  - Transaction should include [tenant, unit, property, date, amount, term, type]
+- Table of Properties
+- Table of Owners/Admin
+- Table of Tenants:
+  - [name, contact_info, type (past, present future), unit, property]
+- Tables for each property which includes rows with:
+  - [unit, property, occupancy_status, tenants, lease_term, rent_amount, type]
+- Expense tracker, upload expenses and assign to each property
+  - [date, type, payee, memo, category, property, amount]
+- Reports:
+  - RentalTracker: balance of all tenants by property, filter by property and balance (past due over threshold e.g. > 1 month or $X)
+  - ExpenseTracker: expenses filtered by [property, payee, category, year, month]
+  - TaskTracker: kanban and/or calendar or tasks to do
      [task, type, property, assigned_to, due_date, status]
 
-# Feature Details
+## Feature Details
 
-## Feature 1: Tenant Balance System
+### Feature 1: Tenant Balance System
 
-### Data Structures
+#### Data Structures
+
 - **Tenant profile**
   - Name
   - Contact information
@@ -44,7 +49,8 @@ Stack:
   - Which property contains the unit
   - Property identifier
 
-### Financial Tracking
+#### Financial Tracking
+
 - **Payment records**
   - Amount
   - Date
@@ -61,23 +67,27 @@ Stack:
   - Formula: Paid - Owed
   - Example: $1000 Jan paid - $1000 Jan owed - $1000 Feb owed = $1000 total owed
 
-### Relationships
-- **Payment to tenant mapping**
-- **Tenant to unit mapping**
-- **Unit to property mapping**
+#### Relationships
 
-### Platform Purpose
+- One property has many units (1:N)
+- One unit has one or more tenants (1:N)
+- One tenant has one or more payments (1:N)
+
+#### Platform Purpose
+
 - Internal tool for business partners
 - Centralize information to replace manual spreadsheets
 - Admin-only access (not tenant-facing)
 
-### Core Functionality
+#### Core Functionality
+
 - Searchable database of linked information
   - Tenants, units, property info
 
-## Feature 2: Centralized Property and Tenant Information
+### Feature 2: Centralized Property and Tenant Information
 
-### Property Data Structure
+#### Property Data Structure
+
 - **Property Details**
   - Property ID (primary key)
   - Address (street, city, state, zip)
@@ -98,7 +108,8 @@ Stack:
   - Amenities
   - Notes
 
-### Tenant Data Structure (Extended)
+#### Tenant Data Structure (Extended)
+
 - **Tenant Details**
   - Tenant ID (primary key)
   - Unit ID (foreign key)
@@ -115,14 +126,10 @@ Stack:
   - Status (active, former, eviction)
   - Notes
 
-### Relationships
-- One property has many units (1:N)
-- One unit has one or more tenants (1:N)
-- One tenant has one or more payments (1:N)
+### Feature 3: Rent Lease Creation
 
-## Feature 3: Rent Lease Creation
+#### Lease Template Data Structure
 
-### Lease Template Data Structure
 - **Template**
   - Template ID
   - Template name
@@ -131,7 +138,8 @@ Stack:
   - Last modified date
   - Default content (formatted text)
 
-### Lease Data Structure
+#### Lease Data Structure
+
 - **Lease**
   - Lease ID (primary key)
   - Template ID (foreign key)
@@ -149,13 +157,15 @@ Stack:
   - Status (draft, active, expired, terminated)
   - Generated document reference/link
 
-### Lease Generation Functionality
+#### Lease Generation Functionality
+
 - Variable field replacement (tenant name, unit, dates, rent amount)
 - Document storage/retrieval
 - Version tracking
 - Signature tracking
 
 ## UI
+
 - sign in with email
 - see dashboard, where you can look at tenants
   - billing per tenant
@@ -164,7 +174,7 @@ Stack:
   - maintenance requests per property
   - expense tracking per property
 
-# Authentication Flow
+## Authentication Flow
 
 ```mermaid
 sequenceDiagram
@@ -188,20 +198,20 @@ sequenceDiagram
     FastAPI->>User: Return protected resource if valid
 ```
 
+## Documentation
 
-# Documentation
+### AWS Cognito
 
-## AWS Cognito
 CognitoIdentityProvider
-https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/cognito-idp.html
+<https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/cognito-idp.html>
+
 ```python
 import boto3
 client = boto3.client('cognito-idp')
 ```
 
-## FastAPI
+### FastAPI
 
-## AWS Lambda
+### AWS Lambda
 
-## AWS API Gateway
-
+### AWS API Gateway
