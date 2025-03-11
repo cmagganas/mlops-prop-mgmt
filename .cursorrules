@@ -1,56 +1,62 @@
 
-  You are an expert in Python, FastAPI V2, and scalable API development.
-  
-  Key Principles
-  - Write concise, technical responses with accurate Python examples.
-  - Use functional, declarative programming; avoid classes where possible.
-  - Prefer iteration and modularization over code duplication.
-  - Use descriptive variable names with auxiliary verbs (e.g., is_active, has_permission).
-  - Use lowercase with underscores for directories and files (e.g., routers/user_routes.py).
-  - Favor named exports for routes and utility functions.
-  - Use the Receive an Object, Return an Object (RORO) pattern.
+You are an expert in Python, FastAPI V2, and scalable API development.
+Key Principles
+
+- Write concise, technical responses with accurate Python examples.
+- Use functional, declarative programming; avoid classes where possible.
+- Prefer iteration and modularization over code duplication.
+- Use descriptive variable names with auxiliary verbs (e.g., is_active, has_permission).
+- Use lowercase with underscores for directories and files (e.g., routers/user_routes.py).
+- Favor named exports for routes and utility functions.
+- Use the Receive an Object, Return an Object (RORO) pattern.
   
   Python/FastAPI
-  - Use def for pure functions and async def for asynchronous operations.
-  - Use type hints for all function signatures. Prefer Pydantic models over raw dictionaries for input validation.
-  - File structure: exported router, sub-routes, utilities, static content, types (models, schemas).
-  - Avoid unnecessary curly braces in conditional statements.
-  - For single-line statements in conditionals, omit curly braces.
-  - Use concise, one-line syntax for simple conditional statements (e.g., if condition: do_something()).
+
+- Use def for pure functions and async def for asynchronous operations.
+- Use type hints for all function signatures. Prefer Pydantic models over raw dictionaries for input validation.
+- File structure: exported router, sub-routes, utilities, static content, types (models, schemas).
+- Avoid unnecessary curly braces in conditional statements.
+- For single-line statements in conditionals, omit curly braces.
+- Use concise, one-line syntax for simple conditional statements (e.g., if condition: do_something()).
   
   Error Handling and Validation
-  - Prioritize error handling and edge cases:
-    - Handle errors and edge cases at the beginning of functions.
-    - Use early returns for error conditions to avoid deeply nested if statements.
-    - Place the happy path last in the function for improved readability.
-    - Avoid unnecessary else statements; use the if-return pattern instead.
-    - Use guard clauses to handle preconditions and invalid states early.
-    - Implement proper error logging and user-friendly error messages.
-    - Use custom error types or error factories for consistent error handling.
+
+- Prioritize error handling and edge cases:
+  - Handle errors and edge cases at the beginning of functions.
+  - Use early returns for error conditions to avoid deeply nested if statements.
+  - Place the happy path last in the function for improved readability.
+  - Avoid unnecessary else statements; use the if-return pattern instead.
+  - Use guard clauses to handle preconditions and invalid states early.
+  - Implement proper error logging and user-friendly error messages.
+  - Use custom error types or error factories for consistent error handling.
   
   Dependencies
-  - FastAPI
-  - Pydantic v2
-  - Async database libraries
+
+- FastAPI
+- Pydantic v2
+- Async database libraries
   
   FastAPI-Specific Guidelines
-  - Use functional components (plain functions) and Pydantic models for input validation and response schemas.
-  - Use declarative route definitions with clear return type annotations.
-  - Use def for synchronous operations and async def for asynchronous ones.
-  - Minimize @app.on_event("startup") and @app.on_event("shutdown"); prefer lifespan context managers for managing startup and shutdown events.
-  - Use middleware for logging, error monitoring, and performance optimization.
-  - Optimize for performance using async functions for I/O-bound tasks, caching strategies, and lazy loading.
-  - Use HTTPException for expected errors and model them as specific HTTP responses.
-  - Use middleware for handling unexpected errors, logging, and error monitoring.
-  - Use Pydantic's BaseModel for consistent input/output validation and response schemas.
+
+- Use functional components (plain functions) and Pydantic models for input validation and response schemas.
+- Use declarative route definitions with clear return type annotations.
+- Use def for synchronous operations and async def for asynchronous ones.
+- Minimize @app.on_event("startup") and @app.on_event("shutdown"); prefer lifespan context managers for managing startup and shutdown events.
+- Use middleware for logging, error monitoring, and performance optimization.
+- Optimize for performance using async functions for I/O-bound tasks, caching strategies, and lazy loading.
+- Use HTTPException for expected errors and model them as specific HTTP responses.
+- Use middleware for handling unexpected errors, logging, and error monitoring.
+- Use Pydantic's BaseModel for consistent input/output validation and response schemas.
   
   Performance Optimization
-  - Minimize blocking I/O operations; use asynchronous operations for all database calls and external API requests.
-  - Implement caching for static and frequently accessed data using tools like Redis or in-memory stores.
-  - Optimize data serialization and deserialization with Pydantic.
-  - Use lazy loading techniques for large datasets and substantial API responses.
+
+- Minimize blocking I/O operations; use asynchronous operations for all database calls and external API requests.
+- Implement caching for static and frequently accessed data using tools like Redis or in-memory stores.
+- Optimize data serialization and deserialization with Pydantic.
+- Use lazy loading techniques for large datasets and substantial API responses.
   
   Key Conventions
+
   1. Rely on FastAPI’s dependency injection system for managing state and shared resources.
   2. Prioritize API performance metrics (response time, latency, throughput).
   3. Limit blocking operations in routes:
@@ -70,7 +76,7 @@ The state of the code at this point includes
 - Use of `APIRouter` and `request.app.state` to declares the routes in their own file
 - Use of `pydantic-settings` for configuration management
 
-## 12-factor app (https://12factor.net/)
+## 12-factor app (<https://12factor.net/>)
 
 - [ ] 1. **Codebase** - use version control. One codebase, many deploys.
 - [ ] 2. **Dependenices** - explicitly declare and isolate dependencies
@@ -134,7 +140,7 @@ The state of the code at this point includes
 - [ ] Globally catch errors and return a meaningful response to the user. [FastAPI Guide](https://fastapi.tiangolo.com/tutorial/handling-errors/#install-custom-exception-handlers)
   - [ ] Catch `pydantic.ValidationError` as `422 Unprocessable Entity`
   - [ ] Catch `Exception` as `500 Internal Server Error` (as of this writing, FastAPI does not provide a way to catch broad exceptions the same way as other types, see reference code)
-- [ ] In error messages, do not reveal implementation details to the user about what went wrong. 
+- [ ] In error messages, do not reveal implementation details to the user about what went wrong.
   - **Bad:** `"the file was not found in the S3 bucket at path <...>".` (mentions S3)
   - **Good:** `"the file requested was not found at path <...>."`
 - [ ] **(not in this section)** Include a request ID in error messages to give to "the support team" (you). Include it in logs.
@@ -154,11 +160,14 @@ The state of the code at this point includes
 Use Pydantic models wherever possible.
 
 1. [ ] Prefer JSON schema validation wherever possible, e.g.
+
    ```python
     class GetPeopleRequest(BaseModel):
         min_age: int = Field(..., gt=0)
     ```
+
 2. [ ] Use Pydantic validators for more complex validation. [model_validator guide](https://docs.pydantic.dev/latest/concepts/validators/#model-validators)
+
    ```python
     class GetPeopleRequest(BaseModel):
         min_age: int = Field(..., gt=0)
@@ -169,7 +178,6 @@ Use Pydantic models wherever possible.
             if values["min_age"] > values["max_age"]:
                 raise ValueError("min_age must be less than or equal to max_age")
     ```
-
 
 # API Design Checklist - Document your API Contract
 
@@ -199,6 +207,7 @@ Use OpenAPI to document your API. Include:
   - [ ] A title
   - [ ] A client-facing, markdown description of the API that does not expose imlementation details
   - [ ] API version (ideally the semantic version)
+
   ```python
   app = FastAPI(
       title="Pet Store API",
@@ -218,6 +227,7 @@ Use OpenAPI to document your API. Include:
     - [ ] Document notable response headers
     - [ ] Document the content ([MIME](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types)) type(s)
     - [ ] Include at least one example response
+
       ```python
       class PutFileResponse(BaseModel):
           """Response model for `PUT /files/:filePath`."""
@@ -233,25 +243,32 @@ Use OpenAPI to document your API. Include:
       ```
 
 - **Schemas** (pydantic models in request/response)
-  - [ ] Decide if you will use `snake_case` or `camelCase` in JSON request/response payloads. 
+  - [ ] Decide if you will use `snake_case` or `camelCase` in JSON request/response payloads.
     - Be consistent and stick to one
     - Useful: `pydantic.alias_generators.to_camel` in `model_config`, [Pydantic guide](https://docs.pydantic.dev/latest/api/config/#pydantic.config.ConfigDict.loc_by_alias)
   - [ ] Include a docstring in each Pydantic Model
+
     ```python
     class PutFileResponse(BaseModel):
         """Response model for `PUT /files/:filePath`."""
     ```
-  - [ ] Include a description for each field 
+
+  - [ ] Include a description for each field
+
     ```python
     Field(..., description="...")
     ```
+
 - [ ] Give each endpoint a unique "operation ID". This influences the function name in the generated client/server code. [FastAPI Guide 1](https://fastapi.tiangolo.com/advanced/path-operation-advanced-configuration/#using-the-path-operation-function-name-as-the-operationid)
+
   ```python
   @app.get("/files/{file_path}", operation_id="get_file")
   def get_file(file_path: str):
       ...
   ```
+
 - [ ] Use tags to group endpoints. Influences the module/folder functions are grouped in in the generated client/server code.
+
   ```python
   ROUTER = APIRouter(tags=["files"])
 
@@ -259,9 +276,9 @@ Use OpenAPI to document your API. Include:
   def get_file(file_path: str):
       ...
   ```
+
 - [ ] If you are going to put version numbers in your routes, do NOT use full semantic versions, e.g. `GET /v1.0.0/files`. This would require to you to update your routes at each release, which requires a code change in all existing API clients. Instead, prefer the major version number only, e.g. `GET /v1/files`. There are pro's and con's to declaring routes in code vs. at the API Gateway level.
 - [ ] **(not covered in this section)** Keep base URLs stable, e.g. use a registered domain name rather than an autogenerated AWS-created URL
-
 
 # Trunk-based Development workflow for detecting breaking API changes
 
@@ -579,7 +596,6 @@ Installed 43 packages in 208ms
 
 ---
 
-
 Use case context:
 """
 Property Management Cloud Platform Demo Project
@@ -636,6 +652,7 @@ Align project implementation with the cloud engineering course's learning outcom
 """
 
 Lucid Chart System Architecture Context:
+
 ```
 UI
 
