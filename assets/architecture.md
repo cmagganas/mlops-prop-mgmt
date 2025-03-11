@@ -162,6 +162,9 @@ CREATE TABLE payments (
     tenant_id UUID NOT NULL,
     amount DECIMAL(10,2) NOT NULL,
     payment_date DATE NOT NULL,
+    period_month INTEGER NOT NULL,
+    period_year INTEGER NOT NULL,
+    reference_number VARCHAR,
     FOREIGN KEY (lease_id) REFERENCES leases(lease_id),
     FOREIGN KEY (property_id) REFERENCES properties(property_id),
     FOREIGN KEY (unit_id) REFERENCES units(unit_id),
@@ -297,6 +300,8 @@ class Tenant(Base):
     unit = relationship("Unit", back_populates="tenants")
     leases = relationship("Lease", secondary=lease_tenants, back_populates="tenants")
     tenant_history = relationship("TenantHistory", back_populates="tenant")
+    charges = relationship("Charge", back_populates="tenant")
+    payments = relationship("Payment", back_populates="tenant")
 
 class Lease(Base):
     __tablename__ = "leases"
@@ -311,6 +316,7 @@ class Lease(Base):
     # Relationships
     tenants = relationship("Tenant", secondary=lease_tenants, back_populates="leases")
     payments = relationship("Payment", back_populates="lease")
+    charges = relationship("Charge", back_populates="lease")
 
 class Payment(Base):
     __tablename__ = "payments"
@@ -322,9 +328,13 @@ class Payment(Base):
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.tenant_id"), nullable=False)
     amount = Column(Float, nullable=False)
     payment_date = Column(Date, nullable=False)
+    period_month = Column(Integer, nullable=False)
+    period_year = Column(Integer, nullable=False)
+    reference_number = Column(String)
     
     # Relationships
     lease = relationship("Lease", back_populates="payments")
+    tenant = relationship("Tenant", back_populates="payments")
 
 class TenantHistory(Base):
     __tablename__ = "tenant_history"
@@ -338,6 +348,25 @@ class TenantHistory(Base):
     # Relationships
     unit = relationship("Unit", back_populates="tenant_history")
     tenant = relationship("Tenant", back_populates="tenant_history")
+
+class Charge(Base):
+    __tablename__ = "charges"
+    
+    charge_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    lease_id = Column(UUID(as_uuid=True), ForeignKey("leases.lease_id"), nullable=False)
+    property_id = Column(UUID(as_uuid=True), ForeignKey("properties.property_id"), nullable=False)
+    unit_id = Column(UUID(as_uuid=True), ForeignKey("units.unit_id"), nullable=False)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.tenant_id"), nullable=False)
+    amount = Column(Float, nullable=False)
+    due_date = Column(Date, nullable=False)
+    description = Column(String, nullable=False)
+    period_month = Column(Integer, nullable=False)  # 1-12
+    period_year = Column(Integer, nullable=False)
+    is_paid = Column(Boolean, default=False)
+    
+    # Relationships
+    lease = relationship("Lease", back_populates="charges")
+    tenant = relationship("Tenant", back_populates="charges")
 ```
 
 ### 3. Schemas (`schemas.py`)
@@ -417,6 +446,9 @@ class PaymentBase(BaseModel):
     tenant_id: UUID
     amount: float
     payment_date: date
+    period_month: int
+    period_year: int
+    reference_number: str | None = None
 
 class PaymentCreate(PaymentBase):
     pass
@@ -446,6 +478,62 @@ class BatchCreate(BaseModel):
 
 class BatchDelete(BaseModel):
     ids: List[UUID]
+
+# Update PaymentBase to include period tracking
+class PaymentBase(BaseModel):
+    lease_id: UUID
+    property_id: UUID
+    unit_id: UUID
+    tenant_id: UUID
+    amount: float
+    payment_date: date
+    period_month: int
+    period_year: int
+    reference_number: str | None = None
+
+# Create schemas for the report
+class PaymentInfo(BaseModel):
+    payment_date: date
+    reference_number: str | None = None
+    amount: float
+    period_description: str
+    property_unit: str
+    
+    model_config = ConfigDict(from_attributes=True)
+
+class ChargeInfo(BaseModel):
+    due_date: date
+    amount: float
+    period_description: str
+    property_unit: str
+    
+    model_config = ConfigDict(from_attributes=True)
+
+class TenantBalanceReport(BaseModel):
+    tenant_id: UUID
+    tenant_name: str
+    property_name: str
+    unit_name: str
+    paid: list[PaymentInfo] = []
+    owed: list[ChargeInfo] = []
+    balance: float
+    missing_periods: list[str] = []
+    
+    model_config = ConfigDict(from_attributes=True)
+
+class RentalTrackerReport(BaseModel):
+    report_date: date
+    tenants: list[TenantBalanceReport]
+    total_balance: float
+    
+    model_config = ConfigDict(from_attributes=True)
+
+class RentalTrackerRequest(BaseModel):
+    property_id: UUID | None = None
+    min_balance_due: float | None = None
+    as_of_date: date | None = None
+    min_months_behind: int = 1  # Default to 1 month behind
+    sort_by_balance: bool = True  # Default to sorting by balance
 ```
 
 ### 4. CRUD Operations (`crud.py`)
@@ -495,6 +583,163 @@ def delete_property(db: Session, property_id: UUID):
 
 # Unit CRUD operations
 # Similar pattern for Unit, Tenant, Lease, Payment and TenantHistory...
+
+# Charge CRUD operations
+def get_charges(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.Charge).offset(skip).limit(limit).all()
+
+def get_tenant_charges(db: Session, tenant_id: UUID):
+    return db.query(models.Charge).filter(models.Charge.tenant_id == tenant_id).all()
+
+def create_charge(db: Session, charge: schemas.ChargeCreate):
+    db_charge = models.Charge(**charge.model_dump())
+    db.add(db_charge)
+    db.commit()
+    db.refresh(db_charge)
+    return db_charge
+
+def mark_charge_paid(db: Session, charge_id: UUID, is_paid: bool = True):
+    db_charge = db.query(models.Charge).filter(models.Charge.charge_id == charge_id).first()
+    db_charge.is_paid = is_paid
+    db.commit()
+    db.refresh(db_charge)
+    return db_charge
+
+# Add functions to get tenant payments
+def get_tenant_payments(db: Session, tenant_id: UUID):
+    return db.query(models.Payment).filter(models.Payment.tenant_id == tenant_id).all()
+
+# Functions for the rental tracker report
+def get_rental_tracker_report(
+    db: Session, 
+    property_id: UUID = None, 
+    min_balance_due: float = 0, 
+    as_of_date: date = None,
+    min_months_behind: int = 1,
+    sort_by_balance: bool = True
+):
+    # If no date specified, use today
+    if not as_of_date:
+        as_of_date = date.today()
+    
+    # Start with a query that joins tenants with their units
+    query = db.query(models.Tenant).join(models.Unit, models.Tenant.unit_id == models.Unit.unit_id)
+    
+    # Filter by property if specified
+    if property_id:
+        query = query.filter(models.Unit.property_id == property_id)
+    
+    # Get all matching tenants
+    tenants = query.all()
+    
+    # Build the report
+    tenant_reports = []
+    total_balance = 0
+    
+    for tenant in tenants:
+        # Get property and unit info
+        unit = db.query(models.Unit).filter(models.Unit.unit_id == tenant.unit_id).first()
+        if not unit:
+            continue
+            
+        property = db.query(models.Property).filter(models.Property.property_id == unit.property_id).first()
+        if not property:
+            continue
+        
+        # Get all charges and payments
+        charges = db.query(models.Charge).filter(
+            models.Charge.tenant_id == tenant.tenant_id,
+            models.Charge.due_date <= as_of_date
+        ).all()
+        
+        payments = db.query(models.Payment).filter(
+            models.Payment.tenant_id == tenant.tenant_id,
+            models.Payment.payment_date <= as_of_date
+        ).all()
+        
+        # Calculate total owed and paid
+        total_owed = sum(charge.amount for charge in charges)
+        total_paid = sum(payment.amount for payment in payments)
+        balance = total_owed - total_paid
+        
+        # Skip if balance is less than minimum
+        if balance < min_balance_due:
+            continue
+        
+        # Format payments for report
+        paid_info = []
+        for payment in payments:
+            period_desc = f"{get_month_name(payment.period_month)} {payment.period_year}"
+            property_unit = f"{property.name} Unit {unit.unit_name}"
+            
+            paid_info.append(schemas.PaymentInfo(
+                payment_date=payment.payment_date,
+                reference_number=payment.reference_number,
+                amount=payment.amount,
+                period_description=period_desc,
+                property_unit=property_unit
+            ))
+        
+        # Format charges for report
+        owed_info = []
+        periods_paid = {(p.period_month, p.period_year) for p in payments}
+        periods_owed = set()
+        
+        for charge in charges:
+            period_desc = f"{get_month_name(charge.period_month)} {charge.period_year}"
+            property_unit = f"{property.name} Unit {unit.unit_name}"
+            periods_owed.add((charge.period_month, charge.period_year))
+            
+            owed_info.append(schemas.ChargeInfo(
+                due_date=charge.due_date,
+                amount=charge.amount,
+                period_description=period_desc,
+                property_unit=property_unit
+            ))
+        
+        # Find missing periods
+        missing_periods = []
+        for period in periods_owed:
+            if period not in periods_paid:
+                missing_periods.append(f"{get_month_name(period[0])} {period[1]}")
+        
+        # Skip if not enough months behind
+        if len(missing_periods) < min_months_behind:
+            continue
+            
+        # Create tenant report
+        tenant_report = schemas.TenantBalanceReport(
+            tenant_id=tenant.tenant_id,
+            tenant_name=tenant.name,
+            property_name=property.name,
+            unit_name=unit.unit_name,
+            paid=paid_info,
+            owed=owed_info,
+            balance=balance,
+            missing_periods=missing_periods
+        )
+        
+        tenant_reports.append(tenant_report)
+        total_balance += balance
+    
+    # Sort by balance if requested (default)
+    if sort_by_balance:
+        tenant_reports.sort(key=lambda x: x.balance, reverse=True)
+    
+    # Create the full report
+    return schemas.RentalTrackerReport(
+        report_date=as_of_date,
+        tenants=tenant_reports,
+        total_balance=total_balance
+    )
+
+def get_month_name(month_number):
+    """Convert month number to name"""
+    return {
+        1: "January", 2: "February", 3: "March", 4: "April",
+        5: "May", 6: "June", 7: "July", 8: "August",
+        9: "September", 10: "October", 11: "November", 12: "December"
+    }.get(month_number, "Unknown")
 ```
 
 ### 5. API Endpoints (`main.py` or `routers/`)
@@ -553,6 +798,93 @@ def delete_properties_batch(property_ids: List[UUID], db: Session = Depends(get_
     pass
 
 # Similar routes for Unit, Tenant, Lease, Payment and TenantHistory
+
+# Add to existing file or create a new router file
+# POST /reports/rental-tracker/
+@app.post("/reports/rental-tracker/", response_model=schemas.RentalTrackerReport)
+async def generate_rental_tracker_report(
+    request: schemas.RentalTrackerRequest = Depends(), 
+    db: Session = Depends(get_db)
+):
+    """
+    Generate a rental tracker report showing tenant balances.
+    
+    Default: Shows tenants at least 1 month behind, sorted by highest amount owed.
+    
+    Filters:
+    - property_id: Filter by specific property
+    - min_balance_due: Minimum balance to include (default: 0)
+    - as_of_date: Report date (default: today)
+    - min_months_behind: Minimum months behind to include (default: 1)
+    - sort_by_balance: Sort by balance amount desc (default: true)
+    """
+    return crud.get_rental_tracker_report(
+        db=db,
+        property_id=request.property_id,
+        min_balance_due=request.min_balance_due or 0,
+        as_of_date=request.as_of_date,
+        min_months_behind=request.min_months_behind,
+        sort_by_balance=request.sort_by_balance
+    )
+
+# GET /reports/rental-tracker/
+@app.get("/reports/rental-tracker/", response_model=schemas.RentalTrackerReport)
+async def get_rental_tracker_report(
+    property_id: UUID = None,
+    min_balance_due: float = 0,
+    as_of_date: date = None,
+    min_months_behind: int = 1,
+    sort_by_balance: bool = True,
+    db: Session = Depends(get_db)
+):
+    """
+    Generate a rental tracker report showing tenant balances.
+    
+    Default: Shows tenants at least 1 month behind, sorted by highest amount owed.
+    
+    Filters:
+    - property_id: Filter by specific property
+    - min_balance_due: Minimum balance to include (default: 0)
+    - as_of_date: Report date (default: today)
+    - min_months_behind: Minimum months behind to include (default: 1)
+    - sort_by_balance: Sort by balance amount desc (default: true)
+    """
+    return crud.get_rental_tracker_report(
+        db=db,
+        property_id=property_id,
+        min_balance_due=min_balance_due,
+        as_of_date=as_of_date,
+        min_months_behind=min_months_behind,
+        sort_by_balance=sort_by_balance
+    )
+
+# Also add routes for charge management
+@app.post("/charges/", response_model=schemas.Charge)
+async def create_charge(charge: schemas.ChargeCreate, db: Session = Depends(get_db)):
+    return crud.create_charge(db=db, charge=charge)
+
+@app.get("/charges/tenant/{tenant_id}", response_model=list[schemas.Charge])
+async def get_tenant_charges(tenant_id: UUID, db: Session = Depends(get_db)):
+    return crud.get_tenant_charges(db=db, tenant_id=tenant_id)
+
+@app.patch("/charges/{charge_id}/mark-paid", response_model=schemas.Charge)
+async def mark_charge_paid(charge_id: UUID, is_paid: bool = True, db: Session = Depends(get_db)):
+    return crud.mark_charge_paid(db=db, charge_id=charge_id, is_paid=is_paid)
+
+@app.post("/payments/", response_model=schemas.Payment)
+def create_payment(payment: schemas.PaymentCreate, db: Session = Depends(get_db)):
+    # Check if there's a matching charge and mark it as paid
+    matching_charge = db.query(models.Charge).filter(
+        models.Charge.tenant_id == payment.tenant_id,
+        models.Charge.period_month == payment.period_month,
+        models.Charge.period_year == payment.period_year
+    ).first()
+    
+    if matching_charge:
+        matching_charge.is_paid = True
+        db.commit()
+    
+    return crud.create_payment(db=db, payment=payment)
 ```
 
 ### 6. Modular Routers (Optional)
@@ -589,4 +921,75 @@ app.include_router(units.router)
 app.include_router(tenants.router)
 app.include_router(leases.router)
 app.include_router(payments.router)
+```
+
+### Example API Responses
+A successful response will look like:
+```json
+{
+  "report_date": "2025-04-15",
+  "tenants": [
+    {
+      "tenant_id": "f87e5195-af78-4318-8fff-35a0234d1f8a",
+      "tenant_name": "John Smith",
+      "property_name": "123 Main St.",
+      "unit_name": "808",
+      "paid": [
+        {
+          "payment_date": "2025-01-01",
+          "reference_number": "3218",
+          "amount": 1000,
+          "period_description": "January 2025",
+          "property_unit": "123 Main St. Unit 808"
+        },
+        {
+          "payment_date": "2025-02-01",
+          "reference_number": "3219",
+          "amount": 1000,
+          "period_description": "February 2025",
+          "property_unit": "123 Main St. Unit 808"
+        }
+      ],
+      "owed": [
+        {
+          "due_date": "2025-01-01",
+          "amount": 1000,
+          "period_description": "January 2025",
+          "property_unit": "123 Main St. Unit 808"
+        },
+        {
+          "due_date": "2025-02-01",
+          "amount": 1000,
+          "period_description": "February 2025",
+          "property_unit": "123 Main St. Unit 808"
+        },
+        {
+          "due_date": "2025-03-01",
+          "amount": 1000,
+          "period_description": "March 2025",
+          "property_unit": "123 Main St. Unit 808"
+        },
+        {
+          "due_date": "2025-04-01",
+          "amount": 1000,
+          "period_description": "April 2025",
+          "property_unit": "123 Main St. Unit 808"
+        }
+      ],
+      "balance": 2000,
+      "missing_periods": ["March 2025", "April 2025"]
+    },
+    {
+      "tenant_id": "5a72f431-25e9-42cd-a5eb-c1fd479d47a6",
+      "tenant_name": "Jane Doe",
+      "property_name": "456 Oak Ave.",
+      "unit_name": "12B",
+      "paid": [...],
+      "owed": [...],
+      "balance": 1500,
+      "missing_periods": ["April 2025"]
+    }
+  ],
+  "total_balance": 3500
+}
 ```
