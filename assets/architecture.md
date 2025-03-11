@@ -92,15 +92,16 @@ sequenceDiagram```
 ## Database Tables
 
 ### Properties Table
+
 ```sql
-CREATE TABLE properties (
-    property_id UUID PRIMARY KEY,
+CREATE TABLE properties (property_id UUID PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     description TEXT
 );
 ```
 
 ### Units Table
+
 ```sql
 CREATE TABLE units (
     unit_id UUID PRIMARY KEY,
@@ -115,6 +116,7 @@ CREATE TABLE units (
 ```
 
 ### Tenants Table
+
 ```sql
 CREATE TABLE tenants (
     tenant_id UUID PRIMARY KEY,
@@ -128,6 +130,7 @@ CREATE TABLE tenants (
 ```
 
 ### Leases Table
+
 ```sql
 CREATE TABLE leases (
     lease_id UUID PRIMARY KEY,
@@ -142,6 +145,7 @@ CREATE TABLE leases (
 ```
 
 ### Lease_Tenants Table (Junction table for multiple tenants per lease)
+
 ```sql
 CREATE TABLE lease_tenants (
     lease_id UUID NOT NULL,
@@ -153,6 +157,7 @@ CREATE TABLE lease_tenants (
 ```
 
 ### Payments Table
+
 ```sql
 CREATE TABLE payments (
     payment_id UUID PRIMARY KEY,
@@ -173,6 +178,7 @@ CREATE TABLE payments (
 ```
 
 ### Tenant_History Table (for tracking active and past tenants)
+
 ```sql
 CREATE TABLE tenant_history (
     unit_id UUID NOT NULL,
@@ -212,6 +218,7 @@ Tenant_History  Tenants (many)  Leases (many)
 ```
 
 ## FastAPI CRUD Endpoints for Property Management System
+
 Here's the skeleton FastAPI code for implementing CRUD operations for your property management tables. I'll keep it minimal and focus on the core functionality.
 
 ### 1. Database Setup (`database.py`)
@@ -924,7 +931,9 @@ app.include_router(payments.router)
 ```
 
 ### Example API Responses
+
 A successful response will look like:
+
 ```json
 {
   "report_date": "2025-04-15",
