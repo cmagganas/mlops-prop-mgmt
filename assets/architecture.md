@@ -1,33 +1,22 @@
-Lucid Chart System Architecture Context:
-```
-UI
+# Lucid Chart System Architecture Context
 
-sign in with email
-see dashboard, where you can look at tenants
-billing per tenant
-outstanding balance
-their payments
-maintenance requests per property
-expense tracking per property
-Entity Relationship Diagram
-Properties
-Units
-1:many
-Tenant- name- 
-Payment- name- 
-1:many
-1:many
+## UI
 
-User's Browser
-API Gateway
-Gradio/FastAPI in Lambda
-Rent
-Important Spreadsheets
-selectproperty
-(dropdown) Select Tenant
-Assignments
+* sign in with email
+* see dashboard, where you can look at tenants
+  * billing per tenant
+    * outstanding balance
+    * their payments
+  * maintenance requests per property
+  * expense tracking per property
 
-Step 1
+## Entity Relationship Diagram
+
+`Properties -1:many-> Units -1:many-> Tenants (info: name, etc.) -1:many->  Payments (info: date, amount, unit, month, etc.)`
+
+## Assignments
+
+### Step 1
 
 Entity Relationship Diagram
 Decide what actions you want to do to those entities
@@ -44,8 +33,9 @@ Step 2
 Decide Gradio or JS
 
 If gradio: do a quick POC
- - deploy a gradio app on lambda
- - try to add Cogito "Authorization Code Flow" grant type (the login flow with JWTs)
+
+* deploy a gradio app on lambda
+* try to add Cogito "Authorization Code Flow" grant type (the login flow with JWTs)
 
 If JS
 copy/paste the minecraft PaaS (awscdk-minecraft); get the slimmest version of this running that you possibly can
@@ -55,16 +45,11 @@ Cognito Hosted UI
 Return 301 Redirect: /login
 GET /login (no token)
 
-
-
 Return 301 Redirect: cognito login page URL
 If login successful, redirect back to app
 GET /login?token=<the new jwt>
 
-
-
-
-sequenceDiagram
+sequenceDiagram```
     participant User
     participant FastAPI
     participant Cognito
@@ -76,16 +61,11 @@ sequenceDiagram
     FastAPI->>Cognito: POST /oauth2/token (exchange AUTH_CODE)
     Cognito->>FastAPI: {access_token, id_token} (JWTs)
     FastAPI->>User: Set HttpOnly Cookie {id_token} (JWT stored)
-    
+
     User->>FastAPI: GET /protected (includes Cookie with id_token)
     FastAPI->>Cognito: GET /.well-known/jwks.json (fetch public keys)
     Cognito->>FastAPI: {JWKS Keys}
     FastAPI->>FastAPI: Verify JWT Signature using JWKS
     FastAPI->>FastAPI: Decode JWT, check expiration, verify claims
     FastAPI->>User: Return protected resource if valid
-
-Backend API that serves the frontend HTML
-Frontend
-
-Backend API
-```
+    ```
