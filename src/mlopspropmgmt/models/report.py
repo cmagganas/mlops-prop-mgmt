@@ -16,8 +16,7 @@ from pydantic import (
 class PaymentSummary(BaseModel):
     """Summary of payment activity.
 
-    Provides a breakdown of payments by type.
-    """
+    Provides a breakdown of payments by type."""
 
     count: int = Field(0, description="Number of payments")
     total_amount: float = Field(0.0, description="Total amount of payments")
@@ -38,8 +37,7 @@ class PaymentSummary(BaseModel):
 class LeaseFinancialSummary(BaseModel):
     """Financial summary for a lease.
 
-    Contains information about rent due, total paid, and outstanding balance.
-    """
+    Contains information about rent due, total paid, and outstanding balance."""
 
     lease_id: int = Field(..., description="Lease ID")
     rent_amount: float = Field(..., description="Monthly rent amount")
@@ -58,8 +56,7 @@ class LeaseFinancialSummary(BaseModel):
 class MissingPaymentPeriod(BaseModel):
     """Information about a missing payment period.
 
-    Represents a month where a payment was expected but not received.
-    """
+    Represents a month where a payment was expected but not received."""
 
     year: int = Field(..., description="Year of the missing payment")
     month: int = Field(..., description="Month of the missing payment (1-12)")
@@ -74,8 +71,7 @@ class MissingPaymentPeriod(BaseModel):
 class TenantBalanceReport(BaseModel):
     """Tenant balance report.
 
-    Contains financial information for a specific tenant.
-    """
+    Contains financial information for a specific tenant."""
 
     tenant_id: int = Field(..., description="Tenant ID")
     tenant_name: str = Field(..., description="Tenant name")
@@ -134,8 +130,7 @@ class TenantInfo(BaseModel):
 class UnitBalanceInfo(BaseModel):
     """Financial information for a unit.
 
-    Used in property reports to summarize unit balances.
-    """
+    Used in property reports to summarize unit balances."""
 
     unit_id: int = Field(..., description="Unit ID")
     unit_name: str = Field(..., description="Unit name/number")
@@ -156,8 +151,7 @@ class UnitBalanceInfo(BaseModel):
 class UnitBalanceReport(BaseModel):
     """Detailed balance report for a unit.
 
-    Contains detailed financial information about a specific unit.
-    """
+    Contains detailed financial information about a specific unit."""
 
     unit_id: int = Field(..., description="Unit ID")
     unit_name: str = Field(..., description="Unit name/number")
@@ -217,8 +211,7 @@ class UnitBalanceReport(BaseModel):
 class PropertyFinancialSummary(BaseModel):
     """Financial summary for a property.
 
-    Contains information about all units and tenants in a property.
-    """
+    Contains information about all units and tenants in a property."""
 
     property_id: int = Field(..., description="Property ID")
     property_name: str = Field(..., description="Property name")
@@ -238,8 +231,7 @@ class PropertyBalanceReport(BaseModel):
     """Detailed balance report for a property.
 
     Contains detailed financial information for all units in a property,
-    with a focus on outstanding balances.
-    """
+    with a focus on outstanding balances."""
 
     property_id: int = Field(..., description="Property ID")
     property_name: str = Field(..., description="Property name")
@@ -260,8 +252,7 @@ class PropertyBalanceReport(BaseModel):
 class AllPropertiesBalanceReport(BaseModel):
     """Balance report for all properties.
 
-    Contains summary information about balances across all properties.
-    """
+    Contains summary information about balances across all properties."""
 
     report_date: date = Field(..., description="Date the report was generated")
     property_count: int = Field(..., description="Number of properties")

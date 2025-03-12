@@ -28,18 +28,18 @@ from .unit import unit_repository
 class ReportService:
     """Service for generating financial reports.
 
-    This class provides methods for generating various financial reports.
-    """
+    This class provides methods for generating various financial reports."""
 
     def get_month_name(self, month: int) -> str:
         """Get the name of a month from its number.
 
         Args:
+
             month: Month number (1-12)
 
         Returns:
-            Month name (e.g., 'January')
-        """
+
+            Month name (e.g., 'January')"""
         month_names = [
             "January",
             "February",
@@ -60,12 +60,13 @@ class ReportService:
         """Calculate the number of months between two dates.
 
         Args:
+
             start_date: Start date
             end_date: End date
 
         Returns:
-            Number of months between start_date and end_date
-        """
+
+            Number of months between start_date and end_date"""
         # Use the min of end_date and today to avoid counting future months
         today = date.today()
         actual_end = min(end_date, today)
@@ -89,13 +90,14 @@ class ReportService:
         """Identify periods (months) where payments are missing.
 
         Args:
+
             lease_start_date: Start date of the lease
             monthly_rent: Monthly rent amount
             payments: List of payment records with payment_date
 
         Returns:
-            List of missing payment periods
-        """
+
+            List of missing payment periods"""
         # Current date for comparison
         today = date.today()
 
@@ -147,11 +149,12 @@ class ReportService:
         """Generate a balance report for a tenant.
 
         Args:
+
             tenant_id: ID of the tenant
 
         Returns:
-            TenantBalanceReport if tenant exists, None otherwise
-        """
+
+            TenantBalanceReport if tenant exists, None otherwise"""
         # Get tenant
         tenant = tenant_repository.get_by_id(tenant_id)
         if tenant is None:
@@ -233,11 +236,12 @@ class ReportService:
         """Generate a financial summary for a property.
 
         Args:
+
             property_id: ID of the property
 
         Returns:
-            PropertyFinancialSummary if property exists, None otherwise
-        """
+
+            PropertyFinancialSummary if property exists, None otherwise"""
         # Get property
         property_obj = property_repository.get_by_id(property_id)
         if property_obj is None:
@@ -346,11 +350,12 @@ class ReportService:
         """Generate a detailed balance report for a unit.
 
         Args:
+
             unit_id: ID of the unit
 
         Returns:
-            UnitBalanceReport if the unit exists, None otherwise
-        """
+
+            UnitBalanceReport if the unit exists, None otherwise"""
         # Get unit
         unit = unit_repository.get_by_id(unit_id)
         if unit is None:
@@ -458,11 +463,12 @@ class ReportService:
         """Generate a detailed balance report for a property.
 
         Args:
+
             property_id: ID of the property
 
         Returns:
-            PropertyBalanceReport if the property exists, None otherwise
-        """
+
+            PropertyBalanceReport if the property exists, None otherwise"""
         # Get property
         property_obj = property_repository.get_by_id(property_id)
         if property_obj is None:
@@ -578,8 +584,8 @@ class ReportService:
         """Generate a balance report for all properties.
 
         Returns:
-            AllPropertiesBalanceReport summarizing all properties
-        """
+
+            AllPropertiesBalanceReport summarizing all properties"""
         # Get all properties
         properties = property_repository.get_all()
 
@@ -618,7 +624,16 @@ class ReportService:
                 )
 
         # Sort property summaries by balance amount (descending)
-        property_summaries.sort(key=lambda p: float(p["balance"]), reverse=True)
+        def get_balance_value(prop_summary):
+            balance = prop_summary.get("balance", 0)
+            if balance is None:
+                return 0.0
+            try:
+                return float(balance)
+            except (ValueError, TypeError):
+                return 0.0
+
+        property_summaries.sort(key=get_balance_value, reverse=True)
 
         # Create and return report
         return AllPropertiesBalanceReport(
@@ -638,12 +653,13 @@ class ReportService:
         """Generate a balance report with flexible filtering.
 
         Args:
+
             property_id: Optional property ID to filter by
             unit_id: Optional unit ID to filter by
 
         Returns:
-            A report structure based on the filtering level
-        """
+
+            A report structure based on the filtering level"""
         if unit_id:
             return self.generate_unit_balance_report(unit_id)
         elif property_id:

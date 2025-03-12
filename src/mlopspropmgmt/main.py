@@ -14,11 +14,9 @@ from .routers import unit as unit_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """
-    Lifespan context manager for FastAPI.
+    """Lifespan context manager for FastAPI.
 
-    Handles startup and shutdown events for the application.
-    """
+    Handles startup and shutdown events for the application."""
     # Startup logic
     print(f"Starting {settings.app_name} {settings.app_version}")
     yield
@@ -27,15 +25,14 @@ async def lifespan(app: FastAPI):
 
 
 def create_app() -> FastAPI:
-    """
-    Create and configure the FastAPI application.
+    """Create and configure the FastAPI application.
 
     This factory function allows for easier testing and deployment
     by separating app creation from running the server.
 
     Returns:
-        A configured FastAPI application
-    """
+
+        A configured FastAPI application"""
     app = FastAPI(
         title=settings.app_name,
         description=settings.app_description,

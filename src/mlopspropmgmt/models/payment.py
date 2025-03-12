@@ -16,8 +16,7 @@ from pydantic import (
 class PaymentMethod(str, Enum):
     """Payment method enumeration.
 
-    Represents the various methods a payment can be made.
-    """
+    Represents the various methods a payment can be made."""
 
     CASH = "cash"
     CHECK = "check"
@@ -30,8 +29,7 @@ class PaymentMethod(str, Enum):
 class PaymentType(str, Enum):
     """Payment type enumeration.
 
-    Represents the various types of payments.
-    """
+    Represents the various types of payments."""
 
     RENT = "rent"
     SECURITY_DEPOSIT = "security_deposit"
@@ -44,8 +42,7 @@ class PaymentType(str, Enum):
 class PaymentBase(BaseModel):
     """Base payment information model.
 
-    Common attributes shared by payment creation and retrieval.
-    """
+    Common attributes shared by payment creation and retrieval."""
 
     lease_id: int = Field(..., description="ID of the lease this payment is for")
     tenant_id: int = Field(..., description="ID of the tenant making the payment")
@@ -61,17 +58,13 @@ class PaymentBase(BaseModel):
 class PaymentCreate(PaymentBase):
     """Model for creating a new payment.
 
-    Inherits all fields from PaymentBase, used as input model for POST requests.
-    """
-
-    pass
+    Inherits all fields from PaymentBase, used as input model for POST requests."""
 
 
 class Payment(PaymentBase):
     """Complete payment model including the ID.
 
-    Used for response models to include the ID with the payment data.
-    """
+    Used for response models to include the ID with the payment data."""
 
     payment_id: int = Field(..., description="Unique identifier for the payment")
 
@@ -98,9 +91,10 @@ class Payment(PaymentBase):
         """Create a Payment instance from a dictionary.
 
         Args:
+
             data: Dictionary containing payment data
 
         Returns:
-            A Payment instance
-        """
+
+            A Payment instance"""
         return cls(**data)

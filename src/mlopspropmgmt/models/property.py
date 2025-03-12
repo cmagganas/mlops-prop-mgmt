@@ -13,8 +13,7 @@ from pydantic import (
 class PropertyBase(BaseModel):
     """Base property information model.
 
-    Common attributes shared by property creation and retrieval.
-    """
+    Common attributes shared by property creation and retrieval."""
 
     name: str = Field(..., description="Name of the property")
     address: str = Field(..., description="Address of the property")
@@ -23,17 +22,13 @@ class PropertyBase(BaseModel):
 class PropertyCreate(PropertyBase):
     """Model for creating a new property.
 
-    Inherits all fields from PropertyBase, used as input model for POST requests.
-    """
-
-    pass
+    Inherits all fields from PropertyBase, used as input model for POST requests."""
 
 
 class Property(PropertyBase):
     """Complete property model including the ID.
 
-    Used for response models to include the ID with the property data.
-    """
+    Used for response models to include the ID with the property data."""
 
     id: int = Field(..., description="Unique identifier for the property")
 
@@ -49,9 +44,10 @@ class Property(PropertyBase):
         """Create a Property instance from a dictionary.
 
         Args:
+
             data: Dictionary containing property data
 
         Returns:
-            A Property instance
-        """
+
+            A Property instance"""
         return cls(**data)

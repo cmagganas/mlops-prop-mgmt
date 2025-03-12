@@ -15,8 +15,7 @@ from .unit import unit_repository
 class TenantRepository:
     """In-memory repository for tenant data.
 
-    This class provides operations for managing tenants in memory.
-    """
+    This class provides operations for managing tenants in memory."""
 
     def __init__(self):
         """Initialize with some sample tenant data."""
@@ -51,19 +50,20 @@ class TenantRepository:
         """Get all tenants.
 
         Returns:
-            List of Tenant objects
-        """
+
+            List of Tenant objects"""
         return [Tenant.from_dict(t) for t in self.tenants]
 
     def get_by_id(self, tenant_id: int) -> Optional[Tenant]:
         """Get a tenant by its ID.
 
         Args:
+
             tenant_id: ID of the tenant to retrieve
 
         Returns:
-            Tenant if found, None otherwise
-        """
+
+            Tenant if found, None otherwise"""
         for tenant in self.tenants:
             if tenant["tenant_id"] == tenant_id:
                 return Tenant.from_dict(tenant)
@@ -73,11 +73,12 @@ class TenantRepository:
         """Get all tenants for a unit.
 
         Args:
+
             unit_id: ID of the unit
 
         Returns:
-            List of Tenant objects for the unit
-        """
+
+            List of Tenant objects for the unit"""
         return [
             Tenant.from_dict(t) for t in self.tenants if t["unit_id"] == unit_id and t["status"] == TenantStatus.ACTIVE
         ]
@@ -86,22 +87,24 @@ class TenantRepository:
         """Get all tenants with a specific status.
 
         Args:
+
             status: Status to filter by
 
         Returns:
-            List of Tenant objects with the specified status
-        """
+
+            List of Tenant objects with the specified status"""
         return [Tenant.from_dict(t) for t in self.tenants if t["status"] == status]
 
     def create(self, tenant_data: Dict[str, Any]) -> Optional[Tenant]:
         """Create a new tenant.
 
         Args:
+
             tenant_data: Tenant data (without ID)
 
         Returns:
-            Created Tenant with ID, or None if unit not found
-        """
+
+            Created Tenant with ID, or None if unit not found"""
         # Verify that the unit exists if provided
         unit_id = tenant_data.get("unit_id")
         if unit_id is not None:
@@ -122,12 +125,13 @@ class TenantRepository:
         """Update an existing tenant.
 
         Args:
+
             tenant_id: ID of the tenant to update
             tenant_data: New tenant data (without ID)
 
         Returns:
-            Updated Tenant if found, None otherwise
-        """
+
+            Updated Tenant if found, None otherwise"""
         # Verify that the unit exists if it's being changed
         unit_id = tenant_data.get("unit_id")
         if unit_id is not None:
@@ -148,11 +152,12 @@ class TenantRepository:
         """Delete a tenant.
 
         Args:
+
             tenant_id: ID of the tenant to delete
 
         Returns:
-            True if deleted, False if not found
-        """
+
+            True if deleted, False if not found"""
         for i, tenant in enumerate(self.tenants):
             if tenant["tenant_id"] == tenant_id:
                 del self.tenants[i]

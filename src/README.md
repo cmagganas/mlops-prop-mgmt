@@ -90,4 +90,4 @@ The server will start on <http://0.0.0.0:8000>
 - Follow FastAPI best practices
 - Use Pydantic for data validation
 - Keep routes modular and organized
-- Write comprehensive tests for all features 
+- Write comprehensive tests for all features

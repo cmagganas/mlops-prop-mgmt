@@ -27,7 +27,7 @@ Before installing, you can check if your environment is compatible:
 
 ```bash
 # Run the compatibility check script
-python check_env.py
+python .github/scripts/check_env.py
 ```
 
 This will verify your Python version, check for key dependencies, and validate OS compatibility.
@@ -124,3 +124,71 @@ Each report includes:
 ## Project Structure
 
 See [architecture.md](assets/architecture.md) for a detailed overview of the project structure.
+
+## Development Guidelines
+
+### Code Style and Linting
+
+This project uses pre-commit hooks to enforce code style and catch common issues. To ensure your code passes the checks:
+
+1. Install pre-commit hooks:
+   ```bash
+   pip install pre-commit
+   pre-commit install
+   ```
+
+2. Run pre-commit manually before committing:
+   ```bash
+   pre-commit run --all-files
+   ```
+
+3. Use the provided helper scripts to fix common issues:
+
+   - Fix docstring formatting issues:
+     ```bash
+     python .github/scripts/fix_docstrings.py src/mlopspropmgmt
+     ```
+
+   - Fix f-strings without placeholders:
+     ```bash
+     python .github/scripts/fix_fstrings.py src/mlopspropmgmt
+     ```
+
+   - Get suggestions for missing type annotations:
+     ```bash
+     python .github/scripts/add_type_hints.py src/mlopspropmgmt
+     ```
+
+   - Find complex functions that need refactoring:
+     ```bash
+     python .github/scripts/find_complex_functions.py src/mlopspropmgmt
+     ```
+
+4. For complex functions with high cyclomatic complexity:
+   - Consider breaking them down into smaller functions
+   - Extract repeated logic into helper functions
+   - Use more descriptive variable names to improve readability
+
+5. Add type annotations to function signatures to improve type checking:
+   ```python
+   def get_property_report(property_id: str) -> dict:
+       """Get a property report.
+
+       Args:
+           property_id: The ID of the property
+
+       Returns:
+           A dictionary containing the property report data
+       """
+       # Function implementation
+   ```
+
+### Temporarily Bypassing Pre-commit Hooks
+
+If you need to commit changes while still working on fixing linting issues:
+
+```bash
+git commit --no-verify -m "Your commit message"
+```
+
+However, aim to gradually fix all linting issues to maintain code quality.

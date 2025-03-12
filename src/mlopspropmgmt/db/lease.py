@@ -4,7 +4,6 @@ from typing import (
     Dict,
     List,
     Optional,
-    Set,
 )
 
 from ..models.lease import (
@@ -19,8 +18,7 @@ from .unit import unit_repository
 class LeaseRepository:
     """In-memory repository for lease data.
 
-    This class provides operations for managing leases in memory with tenant relationships.
-    """
+    This class provides operations for managing leases in memory with tenant relationships."""
 
     def __init__(self):
         """Initialize with some sample lease data."""
@@ -65,8 +63,8 @@ class LeaseRepository:
         """Get all leases with their associated tenants.
 
         Returns:
-            List of Lease objects
-        """
+
+            List of Lease objects"""
         result = []
         for lease in self.leases:
             tenant_ids = [lt["tenant_id"] for lt in self.lease_tenants if lt["lease_id"] == lease["lease_id"]]
@@ -77,11 +75,12 @@ class LeaseRepository:
         """Get a lease by its ID.
 
         Args:
+
             lease_id: ID of the lease to retrieve
 
         Returns:
-            Lease if found, None otherwise
-        """
+
+            Lease if found, None otherwise"""
         for lease in self.leases:
             if lease["lease_id"] == lease_id:
                 tenant_ids = [lt["tenant_id"] for lt in self.lease_tenants if lt["lease_id"] == lease_id]
@@ -92,11 +91,12 @@ class LeaseRepository:
         """Get all leases for a property.
 
         Args:
+
             property_id: ID of the property
 
         Returns:
-            List of Lease objects for the property
-        """
+
+            List of Lease objects for the property"""
         result = []
         for lease in self.leases:
             if lease["property_id"] == property_id:
@@ -108,11 +108,12 @@ class LeaseRepository:
         """Get all leases for a unit.
 
         Args:
+
             unit_id: ID of the unit
 
         Returns:
-            List of Lease objects for the unit
-        """
+
+            List of Lease objects for the unit"""
         result = []
         for lease in self.leases:
             if lease["unit_id"] == unit_id:
@@ -124,11 +125,12 @@ class LeaseRepository:
         """Get all leases for a tenant.
 
         Args:
+
             tenant_id: ID of the tenant
 
         Returns:
-            List of Lease objects for the tenant
-        """
+
+            List of Lease objects for the tenant"""
         lease_ids = [lt["lease_id"] for lt in self.lease_tenants if lt["tenant_id"] == tenant_id]
         result = []
         for lease in self.leases:
@@ -141,11 +143,12 @@ class LeaseRepository:
         """Get all leases with a specific status.
 
         Args:
+
             status: Status to filter by
 
         Returns:
-            List of Lease objects with the specified status
-        """
+
+            List of Lease objects with the specified status"""
         result = []
         for lease in self.leases:
             if lease["status"] == status:
@@ -157,12 +160,13 @@ class LeaseRepository:
         """Create a new lease with tenant relationships.
 
         Args:
+
             lease_data: Lease data (without ID)
             tenant_ids: List of tenant IDs to associate with this lease
 
         Returns:
-            Created Lease with ID, or None if validation fails
-        """
+
+            Created Lease with ID, or None if validation fails"""
         # Verify that the property exists
         property_id = lease_data["property_id"]
         if not property_repository.get_by_id(property_id):
@@ -196,13 +200,14 @@ class LeaseRepository:
         """Update an existing lease.
 
         Args:
+
             lease_id: ID of the lease to update
             lease_data: New lease data (without ID)
             tenant_ids: Optional list of tenant IDs to update relationships
 
         Returns:
-            Updated Lease if found, None otherwise
-        """
+
+            Updated Lease if found, None otherwise"""
         # Find the lease
         lease_index = None
         for i, lease in enumerate(self.leases):
@@ -250,11 +255,12 @@ class LeaseRepository:
         """Delete a lease and its tenant relationships.
 
         Args:
+
             lease_id: ID of the lease to delete
 
         Returns:
-            True if deleted, False if not found
-        """
+
+            True if deleted, False if not found"""
         for i, lease in enumerate(self.leases):
             if lease["lease_id"] == lease_id:
                 del self.leases[i]
@@ -267,22 +273,24 @@ class LeaseRepository:
         """Get all lease IDs for a tenant.
 
         Args:
+
             tenant_id: ID of the tenant
 
         Returns:
-            List of lease IDs for the tenant
-        """
+
+            List of lease IDs for the tenant"""
         return [lt["lease_id"] for lt in self.lease_tenants if lt["tenant_id"] == tenant_id]
 
     def get_lease_tenants(self, lease_id: int) -> List[int]:
         """Get all tenant IDs for a lease.
 
         Args:
+
             lease_id: ID of the lease
 
         Returns:
-            List of tenant IDs for the lease
-        """
+
+            List of tenant IDs for the lease"""
         return [lt["tenant_id"] for lt in self.lease_tenants if lt["lease_id"] == lease_id]
 
 

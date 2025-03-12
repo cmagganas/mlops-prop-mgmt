@@ -1,3 +1,7 @@
+"""Mlopspropmgmt module.
+
+This module provides functionality for mlopspropmgmt."""
+
 import uvicorn
 
 from mlopspropmgmt.config import settings

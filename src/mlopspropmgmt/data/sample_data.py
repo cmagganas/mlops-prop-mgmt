@@ -1,14 +1,9 @@
 """Sample data for development and demo purposes.
 
 This module contains sample data that can be used by various repositories.
-Data is structured by entity type and can be loaded when initializing repositories.
-"""
+Data is structured by entity type and can be loaded when initializing repositories."""
 
-from datetime import (
-    date,
-    datetime,
-    timedelta,
-)
+from datetime import date
 from typing import (
     Dict,
     List,
@@ -178,9 +173,10 @@ def get_sample_data(entity_type: str) -> List[Dict]:
     """Get sample data for a specific entity type.
 
     Args:
+
         entity_type: The type of entity to get data for (properties, units, tenants, leases, payments)
 
     Returns:
-        A list of dictionaries containing sample data for the specified entity type
-    """
+
+        A list of dictionaries containing sample data for the specified entity type"""
     return SAMPLE_DATA.get(entity_type, [])

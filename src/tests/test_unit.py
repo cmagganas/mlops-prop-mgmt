@@ -1,6 +1,5 @@
 """Tests for the unit endpoints."""
 
-import pytest
 from fastapi.testclient import TestClient
 
 

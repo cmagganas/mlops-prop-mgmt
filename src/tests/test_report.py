@@ -1,13 +1,5 @@
 """Tests for the report endpoints."""
 
-import json
-from datetime import (
-    date,
-    datetime,
-    timedelta,
-)
-from unittest.mock import patch
-
 import pytest
 from fastapi.testclient import TestClient
 

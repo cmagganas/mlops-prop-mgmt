@@ -8,8 +8,7 @@ class Settings(BaseSettings):
     """Application configuration settings.
 
     This class defines all configuration settings for the application,
-    with defaults and environmental variable overrides.
-    """
+    with defaults and environmental variable overrides."""
 
     app_name: str = "Property Management API"
     app_description: str = "API for managing properties, units, tenants, and payments"
@@ -39,8 +38,8 @@ def get_settings() -> Settings:
     """Return cached settings instance.
 
     Returns:
-        Settings: Application settings
-    """
+
+        Settings: Application settings"""
     return Settings()
 
 

@@ -14,8 +14,7 @@ from pydantic import (
 class UnitBase(BaseModel):
     """Base unit information model.
 
-    Common attributes shared by unit creation and retrieval.
-    """
+    Common attributes shared by unit creation and retrieval."""
 
     unit_name: str = Field(..., description="Name or number of the unit")
     property_id: int = Field(..., description="ID of the property this unit belongs to")
@@ -28,17 +27,13 @@ class UnitBase(BaseModel):
 class UnitCreate(UnitBase):
     """Model for creating a new unit.
 
-    Inherits all fields from UnitBase, used as input model for POST requests.
-    """
-
-    pass
+    Inherits all fields from UnitBase, used as input model for POST requests."""
 
 
 class Unit(UnitBase):
     """Complete unit model including the ID.
 
-    Used for response models to include the ID with the unit data.
-    """
+    Used for response models to include the ID with the unit data."""
 
     unit_id: int = Field(..., description="Unique identifier for the unit")
 
@@ -62,9 +57,10 @@ class Unit(UnitBase):
         """Create a Unit instance from a dictionary.
 
         Args:
+
             data: Dictionary containing unit data
 
         Returns:
-            A Unit instance
-        """
+
+            A Unit instance"""
         return cls(**data)

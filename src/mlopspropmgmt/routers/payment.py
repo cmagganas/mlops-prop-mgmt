@@ -32,15 +32,13 @@ async def get_payments(
     start_date: Optional[date] = Query(None, description="Filter payments by start date"),
     end_date: Optional[date] = Query(None, description="Filter payments by end date"),
 ) -> List[Payment]:
-    """
-    Retrieve a list of payments with optional filtering.
+    """Retrieve a list of payments with optional filtering.
 
     - **lease_id**: Optional filter by lease ID
     - **tenant_id**: Optional filter by tenant ID
     - **payment_type**: Optional filter by payment type
     - **start_date**: Optional filter by start date
-    - **end_date**: Optional filter by end date
-    """
+    - **end_date**: Optional filter by end date"""
     if lease_id is not None:
         return payment_repository.get_by_lease(lease_id)
     elif tenant_id is not None:
@@ -56,11 +54,9 @@ async def get_payments(
 async def get_payment(
     payment_id: int = Path(..., description="The ID of the payment to retrieve"),
 ) -> Payment:
-    """
-    Retrieve a specific payment by ID.
+    """Retrieve a specific payment by ID.
 
-    - **payment_id**: The unique identifier of the payment
-    """
+    - **payment_id**: The unique identifier of the payment"""
     payment = payment_repository.get_by_id(payment_id)
     if payment is None:
         raise HTTPException(status_code=404, detail="Payment not found")
@@ -69,11 +65,9 @@ async def get_payment(
 
 @router.post("/", response_model=Payment)
 async def create_payment(payment: PaymentCreate) -> Payment:
-    """
-    Create a new payment.
+    """Create a new payment.
 
-    - **payment**: Payment data to create
-    """
+    - **payment**: Payment data to create"""
     created_payment = payment_repository.create(payment.model_dump())
     if created_payment is None:
         raise HTTPException(
@@ -87,12 +81,10 @@ async def update_payment(
     payment: PaymentCreate,
     payment_id: int = Path(..., description="The ID of the payment to update"),
 ) -> Payment:
-    """
-    Update an existing payment.
+    """Update an existing payment.
 
     - **payment**: Updated payment data
-    - **payment_id**: The unique identifier of the payment to update
-    """
+    - **payment_id**: The unique identifier of the payment to update"""
     updated_payment = payment_repository.update(payment_id, payment.model_dump())
     if updated_payment is None:
         raise HTTPException(
@@ -106,11 +98,9 @@ async def update_payment(
 async def delete_payment(
     payment_id: int = Path(..., description="The ID of the payment to delete"),
 ) -> dict:
-    """
-    Delete a payment.
+    """Delete a payment.
 
-    - **payment_id**: The unique identifier of the payment to delete
-    """
+    - **payment_id**: The unique identifier of the payment to delete"""
     deleted = payment_repository.delete(payment_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Payment not found")
@@ -121,11 +111,9 @@ async def delete_payment(
 async def get_lease_payment_totals(
     lease_id: int = Path(..., description="The ID of the lease to get payment totals for"),
 ) -> dict:
-    """
-    Get total payment amount for a lease.
+    """Get total payment amount for a lease.
 
-    - **lease_id**: The unique identifier of the lease
-    """
+    - **lease_id**: The unique identifier of the lease"""
     # Verify that the lease exists
     payments = payment_repository.get_by_lease(lease_id)
     if not payments:
@@ -139,11 +127,9 @@ async def get_lease_payment_totals(
 async def get_tenant_payment_totals(
     tenant_id: int = Path(..., description="The ID of the tenant to get payment totals for"),
 ) -> dict:
-    """
-    Get total payment amount for a tenant.
+    """Get total payment amount for a tenant.
 
-    - **tenant_id**: The unique identifier of the tenant
-    """
+    - **tenant_id**: The unique identifier of the tenant"""
     # Verify that the tenant exists and has payments
     payments = payment_repository.get_by_tenant(tenant_id)
     if not payments:

@@ -12,8 +12,7 @@ from .property import property_repository
 class UnitRepository:
     """In-memory repository for unit data.
 
-    This class provides operations for managing units in memory.
-    """
+    This class provides operations for managing units in memory."""
 
     def __init__(self):
         """Initialize with some sample unit data."""
@@ -51,23 +50,25 @@ class UnitRepository:
         """Get all units.
 
         Args:
+
             skip: Unused pagination parameter
             limit: Unused pagination parameter
 
         Returns:
-            List of Unit objects
-        """
+
+            List of Unit objects"""
         return [Unit.from_dict(u) for u in self.units]
 
     def get_by_id(self, unit_id: int) -> Optional[Unit]:
         """Get a unit by its ID.
 
         Args:
+
             unit_id: ID of the unit to retrieve
 
         Returns:
-            Unit if found, None otherwise
-        """
+
+            Unit if found, None otherwise"""
         for unit in self.units:
             if unit["unit_id"] == unit_id:
                 return Unit.from_dict(unit)
@@ -77,22 +78,24 @@ class UnitRepository:
         """Get all units for a property.
 
         Args:
+
             property_id: ID of the property
 
         Returns:
-            List of Unit objects for the property
-        """
+
+            List of Unit objects for the property"""
         return [Unit.from_dict(u) for u in self.units if u["property_id"] == property_id]
 
     def create(self, unit_data: Dict[str, Any]) -> Optional[Unit]:
         """Create a new unit.
 
         Args:
+
             unit_data: Unit data (without ID)
 
         Returns:
-            Created Unit with ID, or None if property not found
-        """
+
+            Created Unit with ID, or None if property not found"""
         # Verify that the property exists
         property_id = unit_data.get("property_id")
         if not isinstance(property_id, int):
@@ -113,12 +116,13 @@ class UnitRepository:
         """Update an existing unit.
 
         Args:
+
             unit_id: ID of the unit to update
             unit_data: New unit data (without ID)
 
         Returns:
-            Updated Unit if found, None otherwise
-        """
+
+            Updated Unit if found, None otherwise"""
         # Verify that the property exists if it's being changed
         property_id = unit_data.get("property_id")
         if property_id is not None:
@@ -139,11 +143,12 @@ class UnitRepository:
         """Delete a unit.
 
         Args:
+
             unit_id: ID of the unit to delete
 
         Returns:
-            True if deleted, False if not found
-        """
+
+            True if deleted, False if not found"""
         for i, unit in enumerate(self.units):
             if unit["unit_id"] == unit_id:
                 del self.units[i]

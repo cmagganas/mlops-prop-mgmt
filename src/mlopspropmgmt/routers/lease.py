@@ -1,4 +1,3 @@
-from datetime import date
 from typing import (
     List,
     Optional,
@@ -31,14 +30,12 @@ async def get_leases(
     tenant_id: Optional[int] = Query(None, description="Filter leases by tenant ID"),
     status: Optional[LeaseStatus] = Query(None, description="Filter leases by status"),
 ) -> List[Lease]:
-    """
-    Retrieve a list of leases with optional filtering.
+    """Retrieve a list of leases with optional filtering.
 
     - **property_id**: Optional filter by property ID
     - **unit_id**: Optional filter by unit ID
     - **tenant_id**: Optional filter by tenant ID
-    - **status**: Optional filter by lease status
-    """
+    - **status**: Optional filter by lease status"""
     if property_id is not None:
         return lease_repository.get_by_property(property_id)
     elif unit_id is not None:
@@ -54,11 +51,9 @@ async def get_leases(
 async def get_lease(
     lease_id: int = Path(..., description="The ID of the lease to retrieve"),
 ) -> Lease:
-    """
-    Retrieve a specific lease by ID.
+    """Retrieve a specific lease by ID.
 
-    - **lease_id**: The unique identifier of the lease
-    """
+    - **lease_id**: The unique identifier of the lease"""
     lease = lease_repository.get_by_id(lease_id)
     if lease is None:
         raise HTTPException(status_code=404, detail="Lease not found")
@@ -67,11 +62,9 @@ async def get_lease(
 
 @router.post("/", response_model=Lease)
 async def create_lease(lease: LeaseCreate) -> Lease:
-    """
-    Create a new lease.
+    """Create a new lease.
 
-    - **lease**: Lease data to create, including tenant IDs
-    """
+    - **lease**: Lease data to create, including tenant IDs"""
     # Extract tenant_ids from the request body
     tenant_ids = lease.tenant_ids
 
@@ -91,12 +84,10 @@ async def update_lease(
     lease: LeaseCreate,
     lease_id: int = Path(..., description="The ID of the lease to update"),
 ) -> Lease:
-    """
-    Update an existing lease.
+    """Update an existing lease.
 
     - **lease**: Updated lease data
-    - **lease_id**: The unique identifier of the lease to update
-    """
+    - **lease_id**: The unique identifier of the lease to update"""
     # Extract tenant_ids from the request body
     tenant_ids = lease.tenant_ids
 
@@ -115,11 +106,9 @@ async def update_lease(
 async def delete_lease(
     lease_id: int = Path(..., description="The ID of the lease to delete"),
 ) -> dict:
-    """
-    Delete a lease.
+    """Delete a lease.
 
-    - **lease_id**: The unique identifier of the lease to delete
-    """
+    - **lease_id**: The unique identifier of the lease to delete"""
     deleted = lease_repository.delete(lease_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Lease not found")

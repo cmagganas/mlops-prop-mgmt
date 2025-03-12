@@ -189,7 +189,7 @@ sequenceDiagram
     FastAPI->>Cognito: POST /oauth2/token (exchange AUTH_CODE)
     Cognito->>FastAPI: {access_token, id_token} (JWTs)
     FastAPI->>User: Set HttpOnly Cookie {id_token} (JWT stored)
-    
+
     User->>FastAPI: GET /protected (includes Cookie with id_token)
     FastAPI->>Cognito: GET /.well-known/jwks.json (fetch public keys)
     Cognito->>FastAPI: {JWKS Keys}

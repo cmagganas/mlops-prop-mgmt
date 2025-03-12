@@ -2,14 +2,12 @@ from enum import Enum
 from typing import (
     Any,
     Dict,
-    List,
     Optional,
 )
 
 from pydantic import (
     BaseModel,
     ConfigDict,
-    EmailStr,
     Field,
 )
 
@@ -17,8 +15,7 @@ from pydantic import (
 class TenantStatus(str, Enum):
     """Tenant status enumeration.
 
-    Represents the various states a tenant can be in.
-    """
+    Represents the various states a tenant can be in."""
 
     ACTIVE = "active"
     FORMER = "former"
@@ -29,8 +26,7 @@ class TenantStatus(str, Enum):
 class TenantBase(BaseModel):
     """Base tenant information model.
 
-    Common attributes shared by tenant creation and retrieval.
-    """
+    Common attributes shared by tenant creation and retrieval."""
 
     name: str = Field(..., description="Full name of the tenant")
     email: Optional[str] = Field(None, description="Email address of the tenant")
@@ -42,17 +38,13 @@ class TenantBase(BaseModel):
 class TenantCreate(TenantBase):
     """Model for creating a new tenant.
 
-    Inherits all fields from TenantBase, used as input model for POST requests.
-    """
-
-    pass
+    Inherits all fields from TenantBase, used as input model for POST requests."""
 
 
 class Tenant(TenantBase):
     """Complete tenant model including the ID.
 
-    Used for response models to include the ID with the tenant data.
-    """
+    Used for response models to include the ID with the tenant data."""
 
     tenant_id: int = Field(..., description="Unique identifier for the tenant")
 
@@ -75,9 +67,10 @@ class Tenant(TenantBase):
         """Create a Tenant instance from a dictionary.
 
         Args:
+
             data: Dictionary containing tenant data
 
         Returns:
-            A Tenant instance
-        """
+
+            A Tenant instance"""
         return cls(**data)
