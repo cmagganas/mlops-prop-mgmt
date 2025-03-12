@@ -7,6 +7,7 @@ from .routers import lease as lease_router
 from .routers import payment as payment_router
 from .routers import property as property_router
 from .routers import report as report_router
+from .routers import report_viewer as report_viewer_router
 from .routers import tenant as tenant_router
 from .routers import unit as unit_router
 
@@ -49,6 +50,7 @@ def create_app() -> FastAPI:
     app.include_router(lease_router.router)
     app.include_router(payment_router.router)
     app.include_router(report_router.router)
+    app.include_router(report_viewer_router.router)
 
     # Root endpoint with health check
     @app.get("/", tags=["health"])
