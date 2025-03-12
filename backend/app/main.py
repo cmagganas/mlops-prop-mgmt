@@ -1,8 +1,10 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
+from .routers import auth as auth_router
 from .routers import lease as lease_router
 from .routers import payment as payment_router
 from .routers import property as property_router
@@ -39,8 +41,18 @@ def create_app() -> FastAPI:
         version=settings.app_version,
         lifespan=lifespan,
     )
+    
+    # Configure CORS
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[settings.frontend_url],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
     # Register routers
+    app.include_router(auth_router.router)  # Add the auth router
     app.include_router(property_router.router)
     app.include_router(unit_router.router)
     app.include_router(tenant_router.router)

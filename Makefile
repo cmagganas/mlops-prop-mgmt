@@ -51,3 +51,14 @@ test:
 
 test-wheel-locally:
 	bash run.sh test:wheel-locally
+
+# Backend and Frontend commands
+start-backend:
+	cd backend && pip install -r requirements.txt && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+start-frontend:
+	cd frontend && npm install && npm start
+
+# Combined command to start both services
+start-all:
+	make start-backend & make start-frontend

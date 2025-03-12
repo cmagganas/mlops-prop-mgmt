@@ -1,7 +1,7 @@
 """
-Unit tests for cookiecutter.repo_name.
+Unit tests for the application.
 
-This folder ideally has a parallel folder structure with the src/mlopspropmgmt/ folder.
+This folder ideally has a parallel folder structure with the backend/app/ folder.
 
 In general, unit tests
 

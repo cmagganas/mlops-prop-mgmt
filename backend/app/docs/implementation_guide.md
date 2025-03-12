@@ -28,10 +28,10 @@ When adding new database models:
 
 ```python
 # Example of a well-structured SQLAlchemy model
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Text, Enum
 from sqlalchemy.orm import relationship
 from datetime import datetime
-from mlopspropmgmt.db.base import Base
+from backend.app.db.base import Base
 
 class Maintenance(Base):
     """
@@ -110,8 +110,8 @@ Implement database access using the repository pattern:
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from typing import List, Optional
-from mlopspropmgmt.db.models import Maintenance
-from mlopspropmgmt.models.maintenance import MaintenanceRequestCreate, MaintenanceRequestUpdate
+from backend.app.db.models import Maintenance
+from backend.app.models.maintenance import MaintenanceRequestCreate, MaintenanceRequestUpdate
 
 class MaintenanceRepository:
     """Repository for maintenance request database operations."""
@@ -165,9 +165,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from mlopspropmgmt.db.session import get_db
-from mlopspropmgmt.db.repositories.maintenance import MaintenanceRepository
-from mlopspropmgmt.models.maintenance import (
+from backend.app.db.session import get_db
+from backend.app.db.repositories.maintenance import MaintenanceRepository
+from backend.app.models.maintenance import (
     MaintenanceRequestCreate,
     MaintenanceRequestUpdate,
     MaintenanceRequestResponse,
@@ -240,7 +240,7 @@ For every new feature, implement:
 # Example unit test
 import pytest
 from datetime import datetime
-from mlopspropmgmt.services.report import ReportService
+from backend.app.services.report import ReportService
 
 def test_calculate_months_between():
     """Test calculation of months between two dates."""
@@ -260,8 +260,8 @@ from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 import pytest
 
-from mlopspropmgmt.main import app
-from mlopspropmgmt.db.repositories.maintenance import MaintenanceRepository
+from backend.app.main import app
+from backend.app.db.repositories.maintenance import MaintenanceRepository
 
 @pytest.mark.asyncio
 async def test_create_maintenance_request(client: TestClient, db_session: AsyncSession):

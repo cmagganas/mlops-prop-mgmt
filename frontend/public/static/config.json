@@ -1,0 +1,10 @@
+{
+  "backend_api_url": "http://localhost:8000",
+  "cognito_user_pool_id": "YOUR_USER_POOL_ID",
+  "cognito_hosted_ui_app_client_id": "YOUR_APP_CLIENT_ID",
+  "cognito_hosted_ui_app_client_allowed_scopes": ["email", "openid", "profile"],
+  "cognito_hosted_ui_fqdn": "your-domain.auth.region.amazoncognito.com",
+  "cognito_user_pool_region": "us-east-1",
+  "cognito_hosted_ui_redirect_sign_in_url": "http://localhost:8000/auth/callback",
+  "cognito_hosted_ui_redirect_sign_out_url": "http://localhost:3000"
+}

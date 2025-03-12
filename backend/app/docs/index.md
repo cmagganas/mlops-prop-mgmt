@@ -9,8 +9,8 @@ The Property Management System is a FastAPI-based application for managing prope
 ## Documentation Sections
 
 - [API Documentation](api_documentation.md) - Complete reference for all API endpoints, request/response formats, and examples
-- [Architecture](../../assets/architecture.md) - Overview of the system architecture and component design
-- [Development Guidelines](../../README.md#development-guidelines) - Guidelines for developing and contributing to the project
+- [Architecture](assets/architecture.md) - Overview of the system architecture and component design
+- [Development Guidelines](../../../README.md#development-guidelines) - Guidelines for developing and contributing to the project
 
 ## Quick Links
 
@@ -22,7 +22,8 @@ The Property Management System is a FastAPI-based application for managing prope
 
 ```
 src/
-├── mlopspropmgmt/           # Main package
+├── backend/
+│   ├── app/           # Main package
 │   ├── config.py            # Application configuration
 │   ├── db/                  # Database models and repositories
 │   ├── models/              # Data models (Pydantic models)
