@@ -1002,3 +1002,55 @@ A successful response will look like:
   "total_balance": 3500
 }
 ```
+
+## FastAPI app structure
+
+src/
+├── README.md                # Project documentation specific to the source code
+├── mlopspropmgmt/           # Main application package
+│   ├── __init__.py          # Package initialization
+│   ├── config/              # Configuration settings
+│   │   ├── __init__.py
+│   │   └── settings.py      # Application settings using Pydantic
+│   ├── data/                # Sample data for development/demo
+│   │   ├── __init__.py
+│   │   └── sample_data.py   # Centralized sample data for consistency
+│   ├── db/                  # Database repositories (in-memory for demo)
+│   │   ├── __init__.py
+│   │   ├── lease.py         # Lease repository
+│   │   ├── payment.py       # Payment repository
+│   │   ├── property.py      # Property repository
+│   │   ├── report.py        # Report service
+│   │   ├── tenant.py        # Tenant repository
+│   │   └── unit.py          # Unit repository
+│   ├── main.py              # Application factory and FastAPI setup
+│   ├── models/              # Pydantic models for data validation
+│   │   ├── __init__.py
+│   │   ├── lease.py         # Lease models
+│   │   ├── payment.py       # Payment models
+│   │   ├── property.py      # Property models
+│   │   ├── report.py        # Report models
+│   │   ├── tenant.py        # Tenant models
+│   │   └── unit.py          # Unit models
+│   ├── routers/             # API route definitions
+│   │   ├── __init__.py
+│   │   ├── lease.py         # Lease endpoints
+│   │   ├── payment.py       # Payment endpoints
+│   │   ├── property.py      # Property endpoints
+│   │   ├── report.py        # Report endpoints (JSON)
+│   │   ├── report_viewer.py # HTML report viewer
+│   │   ├── tenant.py        # Tenant endpoints
+│   │   └── unit.py          # Unit endpoints
+│   ├── run.py               # Entry point for running the application
+│   └── templates/           # HTML templates for report viewing
+│       └── report.html      # Main HTML template for reports
+└── tests/                   # Automated tests
+    ├── __init__.py
+    ├── conftest.py          # Test fixtures and configuration
+    ├── test_health.py       # Health check endpoint tests
+    ├── test_lease.py        # Lease endpoint tests
+    ├── test_payment.py      # Payment endpoint tests
+    ├── test_property.py     # Property endpoint tests
+    ├── test_report.py       # Report endpoint tests
+    ├── test_tenant.py       # Tenant endpoint tests
+    └── test_unit.py         # Unit endpoint tests
