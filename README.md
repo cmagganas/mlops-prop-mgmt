@@ -10,6 +10,7 @@ A FastAPI-based application for managing properties, units, tenants, and financi
 - **Environment Configuration**: Added sample .env file and configuration structure
 - **Architecture Documentation**: Added comprehensive architecture overview
 - **Compatibility Checks**: Added environment compatibility verification script
+- **Enhanced Documentation**: Added comprehensive API and implementation documentation
 
 This project now provides both API endpoints and HTML visualizations for property management data, with a focus on financial reporting. The system maintains data on properties, units, tenants, leases, and payments, generating various financial reports that can be viewed through either JSON API responses or the HTML report viewer.
 
@@ -107,6 +108,29 @@ Each report includes:
 - Summary cards showing key financial metrics
 - Data tables with payment history
 - Color-coded balances (green for paid/positive, red for outstanding)
+
+## Project Structure
+
+See [architecture.md](assets/architecture.md) for a detailed overview of the project structure.
+
+## Documentation
+
+The project includes comprehensive documentation to help you understand and use the system:
+
+### API Documentation
+
+Detailed API documentation is available in:
+- Interactive OpenAPI docs: http://localhost:8000/docs (when running the application)
+- Markdown documentation: [src/mlopspropmgmt/docs/api_documentation.md](src/mlopspropmgmt/docs/api_documentation.md)
+
+### Implementation and Development
+
+- [Implementation Guide](src/mlopspropmgmt/docs/implementation_guide.md) - Best practices for implementing new features
+- [Architecture Overview](src/mlopspropmgmt/docs/assets/architecture.md) - System architecture and component design
+
+### Documentation Index
+
+For a complete list of available documentation, see the [Documentation Index](src/mlopspropmgmt/docs/index.md).
 
 ## Development
 

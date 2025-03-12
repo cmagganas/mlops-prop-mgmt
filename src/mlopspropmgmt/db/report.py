@@ -282,7 +282,7 @@ class ReportService:
 
             # Get leases for this unit
             unit_leases = lease_repository.get_by_unit(unit.unit_id)
-            active_leases = [l for l in unit_leases if l.status == "active"]
+            active_leases = [lease for lease in unit_leases if lease.status == "active"]
 
             unit_rent_due = 0.0
             unit_rent_paid = 0.0
@@ -400,7 +400,7 @@ class ReportService:
 
         # Get leases for this unit
         unit_leases = lease_repository.get_by_unit(unit_id)
-        active_leases = [l for l in unit_leases if l.status == "active"]
+        active_leases = [lease for lease in unit_leases if lease.status == "active"]
 
         # Process active lease if any
         if active_leases:
@@ -518,7 +518,7 @@ class ReportService:
 
             # Get leases for this unit
             unit_leases = lease_repository.get_by_unit(unit.unit_id)
-            active_leases = [l for l in unit_leases if l.status == "active"]
+            active_leases = [lease for lease in unit_leases if lease.status == "active"]
 
             # Skip if no active leases
             if not active_leases:
@@ -648,7 +648,7 @@ class ReportService:
         )
 
     def generate_balance_report(
-        self, property_id=None, unit_id=None
+        self, property_id: Optional[int] = None, unit_id: Optional[int] = None
     ) -> Union[UnitBalanceReport, PropertyBalanceReport, AllPropertiesBalanceReport, None]:
         """Generate a balance report with flexible filtering.
 
