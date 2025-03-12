@@ -16,8 +16,22 @@ MINIMUM_TEST_COVERAGE_PERCENT=0
 
 # install core and development Python dependencies into the currently activated venv
 function install {
+    # Check if pyproject.toml exists in the current directory
+    if [ ! -f "$THIS_DIR/pyproject.toml" ]; then
+        echo "Error: pyproject.toml not found in $THIS_DIR. Make sure you're running this script from the project root."
+        exit 1
+    fi
+
     python -m pip install --upgrade pip
     python -m pip install --editable "$THIS_DIR/[dev]"
+
+    # Install pre-commit hooks if pre-commit is installed
+    if command -v pre-commit >/dev/null 2>&1; then
+        echo "Setting up pre-commit hooks..."
+        pre-commit install
+    else
+        echo "pre-commit not found. Hooks not installed. Run 'pip install pre-commit' and then 'pre-commit install' to set up hooks."
+    fi
 }
 
 # run linting, formatting, and other static code quality tools
@@ -32,9 +46,9 @@ function lint:ci {
     SKIP=no-commit-to-branch pre-commit run --all-files
 }
 
-# execute tests that are not marked as `slow`
+# execute tests that are not marked as `slow` and exclude auth tests
 function test:quick {
-    run-tests -m "not slow" ${@:-"$THIS_DIR/tests/"}
+    run-tests "-m" "not slow" "-k" "not aws and not test_aws_cognito" ${@}
 }
 
 # execute tests against the installed package; assumes the wheel is already installed
@@ -154,6 +168,14 @@ function help {
     echo "$0 <task> <args>"
     echo "Tasks:"
     compgen -A function | cat -n
+}
+
+# run the FastAPI application
+function run {
+    echo "Starting FastAPI application..."
+    echo "View the API docs at: http://localhost:8000/docs"
+    echo "View the HTML reports at: http://localhost:8000/report-viewer/"
+    python -m uvicorn src.mlopspropmgmt.main:app --reload --host 0.0.0.0 --port 8000
 }
 
 TIMEFORMAT="Task completed in %3lR"
