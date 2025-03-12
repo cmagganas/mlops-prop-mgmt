@@ -172,7 +172,7 @@ class ReportService:
                 unit_summaries.append(
                     {
                         "unit_id": unit.unit_id,
-                        "unit_number": unit.unit_name,
+                        "unit_name": unit.unit_name,
                         "occupied": False,
                         "tenants": [],
                         "rent_due": 0.0,
@@ -230,7 +230,7 @@ class ReportService:
             unit_summaries.append(
                 {
                     "unit_id": unit.unit_id,
-                    "unit_number": unit.unit_number,
+                    "unit_name": unit.unit_name,
                     "occupied": True,
                     "tenants": tenant_summaries,
                     "rent_due": unit_rent_due,
@@ -241,7 +241,7 @@ class ReportService:
 
         # Create and return report
         return PropertyFinancialSummary(
-            property_id=property_obj.property_id,
+            property_id=property_obj.id,
             property_name=property_obj.name,
             unit_count=len(units),
             occupied_units=occupied_units,

@@ -1,5 +1,6 @@
 from datetime import date
 from typing import (
+    Any,
     Dict,
     List,
     Optional,
@@ -113,7 +114,7 @@ class PropertyFinancialSummary(BaseModel):
     total_rent_due: float = Field(..., description="Total rent due from all active leases")
     total_paid: float = Field(..., description="Total amount paid towards all leases")
     total_balance: float = Field(..., description="Current balance for all units (negative means credit)")
-    unit_summaries: List[Dict[str, any]] = Field(..., description="Financial summaries for each unit")
+    unit_summaries: List[Dict[str, Any]] = Field(..., description="Financial summaries for each unit")
 
     model_config = ConfigDict(
         from_attributes=True,
