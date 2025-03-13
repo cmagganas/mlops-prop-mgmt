@@ -177,3 +177,6 @@ dist
 
 # lester_lease_generator
 lester_lease_generator/*
+
+# frontend node_modules
+frontend/node_modules/*

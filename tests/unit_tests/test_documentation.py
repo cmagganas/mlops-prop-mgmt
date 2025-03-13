@@ -69,31 +69,31 @@ def test_documentation_files_exist() -> None:
 def test_markdown_files_have_valid_links():
     """Test that all markdown files have valid internal links."""
     base_docs_dir = Path("backend/app/docs")
-    
+
     # Get all markdown files in the docs directory
     markdown_files = list(base_docs_dir.glob("**/*.md"))
     assert len(markdown_files) > 0, "No markdown files found in docs directory"
-    
+
     # Regular expression to find markdown links
-    link_pattern = re.compile(r'\[([^\]]+)\]\(([^)]+)\)')
-    
+    link_pattern = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
+
     for md_file in markdown_files:
         content = md_file.read_text()
-        
+
         # Find all links in the file
         links = link_pattern.findall(content)
-        
+
         for _, link_target in links:
             # Skip external links and anchors
-            if link_target.startswith(('http://', 'https://', '#')):
+            if link_target.startswith(("http://", "https://", "#")):
                 continue
-                
+
             # Check if the link target exists
-            if not link_target.startswith('/'):
+            if not link_target.startswith("/"):
                 # Relative link - check relative to the current file
                 target_path = md_file.parent / link_target
             else:
                 # Absolute link within the docs - check relative to base_docs_dir
-                target_path = base_docs_dir / link_target.lstrip('/')
+                target_path = base_docs_dir / link_target.lstrip("/")
 
             assert target_path.exists(), f"Invalid link in {md_file}: {link_target}"

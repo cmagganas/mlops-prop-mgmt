@@ -189,9 +189,9 @@ function start_application() {
         echo "Using virtual environment at .venv"
         source .venv/bin/activate
     fi
-    
+
     echo "Starting application..."
-    
+
     if [[ "$APP_ENV" == "development" ]]; then
         start_development_server
     else
@@ -201,7 +201,7 @@ function start_application() {
             echo "pip install -e ."
             exit 1
         fi
-        
+
         INSTALLED_PKG_DIR="$(python -c 'import backend.app; print(backend.app.__path__[0])')"
         echo "Using installed package at: $INSTALLED_PKG_DIR"
         python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000

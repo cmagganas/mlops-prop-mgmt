@@ -231,7 +231,7 @@ This project has been restructured to integrate AWS Cognito authentication. The 
 1. Create a User Pool in AWS Cognito
 2. Configure an App Client with the hosted UI
 3. Update configuration in:
-   - `backend/.env` 
+   - `backend/.env`
    - `frontend/public/static/config.dev.json`
 
 ### Starting the Application
