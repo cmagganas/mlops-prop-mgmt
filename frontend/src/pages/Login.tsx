@@ -14,7 +14,7 @@ const Login: React.FC = () => {
       }
       setChecking(false);
     };
-    
+
     checkAuth();
   }, [navigate]);
 
@@ -23,16 +23,16 @@ const Login: React.FC = () => {
   }
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      alignItems: 'center', 
-      justifyContent: 'center', 
-      height: '100vh' 
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: '100vh'
     }}>
       <h1>Property Management System</h1>
       <p>Please sign in to continue</p>
-      <button 
+      <button
         onClick={signInWithCognito}
         style={{
           padding: '10px 20px',

@@ -25,19 +25,19 @@ const ProtectedPage: React.FC = () => {
   }
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      alignItems: 'center', 
-      padding: '40px' 
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      padding: '40px'
     }}>
       <h1>Property Management Dashboard</h1>
       <p>You are authenticated!</p>
-      
+
       {userData && (
-        <div style={{ 
-          backgroundColor: '#f5f5f5', 
-          padding: '20px', 
+        <div style={{
+          backgroundColor: '#f5f5f5',
+          padding: '20px',
           borderRadius: '8px',
           marginTop: '20px',
           maxWidth: '600px'
@@ -54,8 +54,8 @@ const ProtectedPage: React.FC = () => {
           )}
         </div>
       )}
-      
-      <button 
+
+      <button
         onClick={signOut}
         style={{
           padding: '10px 20px',
