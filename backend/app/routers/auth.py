@@ -65,12 +65,12 @@ async def callback(request: Request, code: str = None, error: str = None, error_
     try:
         # Log which approach we're using
         use_authlib = request.query_params.get("use_authlib", "false").lower() == "true"
-        
+
         if use_authlib:
             print("Debug - Using Authlib to exchange token")
             # Use authlib to exchange the code
             tokens = await fetch_token(code, request)
-            
+
             # Try to get user info
             user_info = await get_userinfo(token=tokens)
             print(f"Debug - User info: {user_info}")
@@ -78,15 +78,11 @@ async def callback(request: Request, code: str = None, error: str = None, error_
             # Use existing implementation
             print(f"Debug - Received authorization code: {code[:10]}...")
             tokens = await exchange_code_for_tokens(code)
-            
+
         # Set tokens in httpOnly cookies
         response = RedirectResponse(url=settings.frontend_url)
         response.set_cookie(
-            key="id_token",
-            value=tokens["id_token"],
-            httponly=True,
-            secure=settings.cookie_secure,
-            samesite="lax"
+            key="id_token", value=tokens["id_token"], httponly=True, secure=settings.cookie_secure, samesite="lax"
         )
         return response
     except Exception as e:
@@ -97,12 +93,18 @@ async def callback(request: Request, code: str = None, error: str = None, error_
 
 @router.get("/logout")
 async def logout():
-    """Log the user out by clearing cookies and redirecting to Cognito logout"""
+    """Log the user out by redirecting to Cognito's logout endpoint with the correct parameters.
+    
+    This follows the standard Cognito logout URL format with client_id and logout_uri parameters.
+    """
+    # Construct the Cognito logout URL with the correct parameters
     cognito_logout_url = (
-        f"{settings.cognito_logout_endpoint}"
+        f"https://{settings.cognito_domain}/oauth2/logout"
         f"?client_id={settings.cognito_client_id}"
         f"&logout_uri={quote(settings.frontend_url)}"
     )
+    
+    # Clear the auth cookie and redirect to Cognito's logout endpoint
     response = RedirectResponse(url=cognito_logout_url)
     response.delete_cookie(key="id_token")
     return response
@@ -126,7 +128,7 @@ async def get_userinfo_authlib(id_token: Optional[str] = None):
     try:
         if not id_token:
             raise HTTPException(status_code=401, detail="No token provided")
-        
+
         user_info = await get_userinfo(access_token=id_token)
         return JSONResponse(content=user_info)
     except Exception as e:
@@ -169,7 +171,7 @@ async def test_auth():
         "next_steps": [
             "1. Visit /auth/login to test the authentication flow",
             "2. After login, visit /auth/user to see your user information",
-            "3. Or try the Authlib version: /auth/login-authlib"
+            "3. Or try the Authlib version: /auth/login-authlib",
         ],
     }
 
@@ -202,7 +204,7 @@ async def run_diagnostic():
     import traceback
 
     import httpx
-    
+
     results = {
         "env_loaded": True,
         "config": {
@@ -210,36 +212,32 @@ async def run_diagnostic():
             "user_pool_id": settings.cognito_user_pool_id,
             "region": settings.cognito_region,
             "domain": settings.cognito_domain,
-            "redirect_uri": settings.redirect_uri
+            "redirect_uri": settings.redirect_uri,
         },
         "urls": {
             "domain_url": settings.cognito_domain_url,
             "auth_endpoint": settings.cognito_auth_endpoint,
             "token_endpoint": settings.cognito_token_endpoint,
-            "jwks_uri": settings.cognito_jwks_uri
+            "jwks_uri": settings.cognito_jwks_uri,
         },
         "network_checks": {},
-        "endpoint_checks": {}
+        "endpoint_checks": {},
     }
-    
+
     # DNS resolution test for main domain
     try:
         domain = settings.cognito_domain_url.replace("https://", "").replace("http://", "").split("/")[0]
         ip = socket.gethostbyname(domain)
-        results["network_checks"]["domain_dns"] = {
-            "status": "success",
-            "domain": domain,
-            "resolved_ip": ip
-        }
+        results["network_checks"]["domain_dns"] = {"status": "success", "domain": domain, "resolved_ip": ip}
     except Exception as e:
         results["network_checks"]["domain_dns"] = {
             "status": "error",
             "domain": domain,
             "error": str(e),
             "error_type": type(e).__name__,
-            "traceback": traceback.format_exc()
+            "traceback": traceback.format_exc(),
         }
-    
+
     # Check JWKS endpoint
     async with httpx.AsyncClient() as client:
         try:
@@ -247,16 +245,16 @@ async def run_diagnostic():
             results["endpoint_checks"]["jwks"] = {
                 "status": "success" if response.status_code == 200 else "error",
                 "status_code": response.status_code,
-                "response_preview": str(response.text)[:100] if response.text else None
+                "response_preview": str(response.text)[:100] if response.text else None,
             }
         except Exception as e:
             results["endpoint_checks"]["jwks"] = {
                 "status": "error",
                 "error": str(e),
                 "error_type": type(e).__name__,
-                "traceback": traceback.format_exc()
+                "traceback": traceback.format_exc(),
             }
-    
+
     # Test connectivity to auth endpoint
     async with httpx.AsyncClient() as client:
         try:
@@ -265,27 +263,48 @@ async def run_diagnostic():
             results["endpoint_checks"]["auth"] = {
                 "status": "success" if response.status_code < 400 else "error",
                 "status_code": response.status_code,
-                "response_preview": str(response.text)[:100] if response.text else None
+                "response_preview": str(response.text)[:100] if response.text else None,
             }
         except Exception as e:
             results["endpoint_checks"]["auth"] = {
                 "status": "error",
                 "error": str(e),
                 "error_type": type(e).__name__,
-                "traceback": traceback.format_exc()
+                "traceback": traceback.format_exc(),
             }
-    
+
     # Generate a login URL
     try:
         auth = get_cognito_auth()
         login_url = auth.get_login_url()
-        results["generated_urls"] = {
-            "login_url": login_url
-        }
+        results["generated_urls"] = {"login_url": login_url}
     except Exception as e:
-        results["generated_urls"] = {
-            "status": "error",
-            "error": str(e)
-        }
-    
+        results["generated_urls"] = {"status": "error", "error": str(e)}
+
     return results
+
+
+@router.get("/custom-logout")
+async def custom_logout(
+    logout_path: str = "/oauth2/logout", 
+    use_redirect_uri: bool = True,
+    use_logout_uri: bool = True
+):
+    """Customizable logout endpoint to test different Cognito logout URL formats"""
+    params = [f"client_id={settings.cognito_client_id}"]
+    
+    if use_redirect_uri:
+        params.append(f"redirect_uri={quote(settings.frontend_url)}")
+    
+    if use_logout_uri:
+        params.append(f"logout_uri={quote(settings.frontend_url)}")
+    
+    # Build the custom URL
+    cognito_logout_url = (
+        f"https://{settings.cognito_domain}{logout_path}"
+        f"?{'&'.join(params)}"
+    )
+    
+    response = RedirectResponse(url=cognito_logout_url)
+    response.delete_cookie(key="id_token")
+    return response

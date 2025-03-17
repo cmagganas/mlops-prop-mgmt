@@ -98,7 +98,7 @@ class Settings(BaseSettings):
     @property
     def cognito_logout_endpoint(self) -> str:
         """Return the full Cognito logout endpoint URL."""
-        return f"{self.cognito_domain_url}/logout"
+        return f"{self.cognito_domain_url}/oauth2/logout"
     
     @property
     def cognito_jwks_uri(self) -> str:

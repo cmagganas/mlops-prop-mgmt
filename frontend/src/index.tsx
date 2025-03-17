@@ -52,6 +52,12 @@ const AuthApp = () => {
     }
   };
 
+  // Test different logout options
+  const testCustomLogout = (path: string, useRedirectUri: boolean, useLogoutUri: boolean) => {
+    const url = `${defaultConfig.backend_api_url}/custom-logout?logout_path=${encodeURIComponent(path)}&use_redirect_uri=${useRedirectUri}&use_logout_uri=${useLogoutUri}`;
+    window.location.href = url;
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -64,21 +70,84 @@ const AuthApp = () => {
         <div style={{ marginTop: '2rem' }}>
           <h2>Welcome, {user?.username || user?.email || 'User'}!</h2>
           <p>You are successfully logged in.</p>
-          <button
-            onClick={handleSignOut}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: '#e74c3c',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '16px',
-              marginTop: '1rem'
-            }}
-          >
-            Sign Out
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '400px', margin: '0 auto' }}>
+            <button 
+              onClick={handleSignOut}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#e74c3c',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '16px'
+              }}
+            >
+              Sign Out (Normal)
+            </button>
+            
+            <h3 style={{ marginTop: '20px' }}>Logout Test Options:</h3>
+            
+            <button 
+              onClick={() => testCustomLogout('/logout', false, true)}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#3498db',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '16px'
+              }}
+            >
+              Test 1: /logout + logout_uri
+            </button>
+            
+            <button 
+              onClick={() => testCustomLogout('/oauth2/logout', false, true)}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#2ecc71',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '16px'
+              }}
+            >
+              Test 2: /oauth2/logout + logout_uri
+            </button>
+            
+            <button 
+              onClick={() => testCustomLogout('/logout', true, false)}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#f39c12',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '16px'
+              }}
+            >
+              Test 3: /logout + redirect_uri
+            </button>
+            
+            <button 
+              onClick={() => testCustomLogout('/oauth2/logout', true, false)}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#9b59b6',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '16px'
+              }}
+            >
+              Test 4: /oauth2/logout + redirect_uri
+            </button>
+          </div>
         </div>
       ) : (
         <div style={{ marginTop: '2rem' }}>
