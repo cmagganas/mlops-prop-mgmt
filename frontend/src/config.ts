@@ -68,17 +68,17 @@ export const isLocalhost = () => Boolean(
     )
 );
 
-// Default config with environment variables or defaults
+// Default config with environment variables without hardcoded fallbacks
 export const defaultConfig: PropertyManagementConfig = {
     // Cognito User Pool Configuration
-    cognito_user_pool_region: process.env.REACT_APP_COGNITO_REGION || 'us-west-1',
-    cognito_user_pool_id: process.env.REACT_APP_COGNITO_USER_POOL_ID || 'us-west-1_ibylltjcj',
-    cognito_hosted_ui_app_client_id: process.env.REACT_APP_COGNITO_APP_CLIENT_ID || '38bmld1m8v71in53pihbddrdji',
-    cognito_hosted_ui_fqdn: process.env.REACT_APP_COGNITO_DOMAIN || 'property-mgmt.auth.us-west-1.amazoncognito.com',
+    cognito_user_pool_region: process.env.REACT_APP_COGNITO_REGION || '',
+    cognito_user_pool_id: process.env.REACT_APP_COGNITO_USER_POOL_ID || '',
+    cognito_hosted_ui_app_client_id: process.env.REACT_APP_COGNITO_APP_CLIENT_ID || '',
+    cognito_hosted_ui_fqdn: process.env.REACT_APP_COGNITO_DOMAIN || '',
     cognito_hosted_ui_app_client_allowed_scopes: ['openid', 'email', 'profile'],
     cognito_hosted_ui_redirect_sign_in_url: process.env.REACT_APP_REDIRECT_SIGN_IN || 'http://localhost:3000',
     cognito_hosted_ui_redirect_sign_out_url: process.env.REACT_APP_REDIRECT_SIGN_OUT || 'http://localhost:3000',
-    
+
     // API Configuration
     backend_api_url: process.env.REACT_APP_API_URL || 'http://localhost:8000',
 };
