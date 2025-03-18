@@ -93,19 +93,23 @@ async def callback(request: Request, code: str = None, error: str = None, error_
 
 @router.get("/logout")
 async def logout():
-    """Log the user out by redirecting to Cognito's logout endpoint with the correct parameters.
+    """Log the user out by clearing cookies and redirecting to the frontend directly.
     
-    This follows the standard Cognito logout URL format with client_id and logout_uri parameters.
+    Implementation details:
+    1. Clears the id_token cookie which contains the JWT that authenticates the user
+    2. Redirects back to the frontend application
+    
+    Note:
+    - We specifically avoid using Cognito's built-in logout endpoints (/logout or /oauth2/logout)
+      as they don't work consistently across different AWS Cognito configurations and versions.
+    - AWS Cognito lacks a standardized logout flow that works reliably across all setups.
+    - This approach is simpler and more reliable as it only depends on HTTP cookie mechanics
+      which are standardized across all browsers.
+    - When the frontend loads after logout, it will detect that no authentication cookie exists
+      and show the login UI.
     """
-    # Construct the Cognito logout URL with the correct parameters
-    cognito_logout_url = (
-        f"https://{settings.cognito_domain}/oauth2/logout"
-        f"?client_id={settings.cognito_client_id}"
-        f"&logout_uri={quote(settings.frontend_url)}"
-    )
-    
-    # Clear the auth cookie and redirect to Cognito's logout endpoint
-    response = RedirectResponse(url=cognito_logout_url)
+    # Clear the auth cookie and redirect to frontend
+    response = RedirectResponse(url=settings.frontend_url)
     response.delete_cookie(key="id_token")
     return response
 
@@ -282,29 +286,3 @@ async def run_diagnostic():
         results["generated_urls"] = {"status": "error", "error": str(e)}
 
     return results
-
-
-@router.get("/custom-logout")
-async def custom_logout(
-    logout_path: str = "/oauth2/logout", 
-    use_redirect_uri: bool = True,
-    use_logout_uri: bool = True
-):
-    """Customizable logout endpoint to test different Cognito logout URL formats"""
-    params = [f"client_id={settings.cognito_client_id}"]
-    
-    if use_redirect_uri:
-        params.append(f"redirect_uri={quote(settings.frontend_url)}")
-    
-    if use_logout_uri:
-        params.append(f"logout_uri={quote(settings.frontend_url)}")
-    
-    # Build the custom URL
-    cognito_logout_url = (
-        f"https://{settings.cognito_domain}{logout_path}"
-        f"?{'&'.join(params)}"
-    )
-    
-    response = RedirectResponse(url=cognito_logout_url)
-    response.delete_cookie(key="id_token")
-    return response

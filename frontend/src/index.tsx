@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { signInWithCognito, signOut } from './auth/cognitoAuth.ts';
 import { defaultConfig } from './config.ts';
 import axios from 'axios';
@@ -43,6 +44,16 @@ const AuthApp = () => {
     checkAuth();
   }, []);
 
+  /**
+   * Handle sign out by redirecting to the backend logout endpoint.
+   * The backend will:
+   * 1. Clear the id_token cookie
+   * 2. Redirect back to the frontend
+   * 
+   * Note: We don't use Cognito's logout endpoints directly as they don't work
+   * consistently across different Cognito configurations. Instead, we rely on
+   * the cookie-based authentication approach where removing the cookie is sufficient.
+   */
   const handleSignOut = async () => {
     try {
       // Redirect to the backend sign-out endpoint
@@ -50,12 +61,6 @@ const AuthApp = () => {
     } catch (error) {
       console.error('Sign out error:', error);
     }
-  };
-
-  // Test different logout options
-  const testCustomLogout = (path: string, useRedirectUri: boolean, useLogoutUri: boolean) => {
-    const url = `${defaultConfig.backend_api_url}/custom-logout?logout_path=${encodeURIComponent(path)}&use_redirect_uri=${useRedirectUri}&use_logout_uri=${useLogoutUri}`;
-    window.location.href = url;
   };
 
   if (loading) {
@@ -71,7 +76,7 @@ const AuthApp = () => {
           <h2>Welcome, {user?.username || user?.email || 'User'}!</h2>
           <p>You are successfully logged in.</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '400px', margin: '0 auto' }}>
-            <button 
+            <button
               onClick={handleSignOut}
               style={{
                 padding: '0.5rem 1rem',
@@ -83,69 +88,7 @@ const AuthApp = () => {
                 fontSize: '16px'
               }}
             >
-              Sign Out (Normal)
-            </button>
-            
-            <h3 style={{ marginTop: '20px' }}>Logout Test Options:</h3>
-            
-            <button 
-              onClick={() => testCustomLogout('/logout', false, true)}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#3498db',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '16px'
-              }}
-            >
-              Test 1: /logout + logout_uri
-            </button>
-            
-            <button 
-              onClick={() => testCustomLogout('/oauth2/logout', false, true)}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#2ecc71',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '16px'
-              }}
-            >
-              Test 2: /oauth2/logout + logout_uri
-            </button>
-            
-            <button 
-              onClick={() => testCustomLogout('/logout', true, false)}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#f39c12',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '16px'
-              }}
-            >
-              Test 3: /logout + redirect_uri
-            </button>
-            
-            <button 
-              onClick={() => testCustomLogout('/oauth2/logout', true, false)}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#9b59b6',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '16px'
-              }}
-            >
-              Test 4: /oauth2/logout + redirect_uri
+              Sign Out
             </button>
           </div>
         </div>
