@@ -85,7 +85,7 @@ make run
 # OR
 bash run.sh run
 # OR
-python -m uvicorn src.mlopspropmgmt.main:app --reload --host 0.0.0.0 --port 8000
+python -m uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 The API will be available at:
@@ -115,22 +115,18 @@ See [architecture.md](assets/architecture.md) for a detailed overview of the pro
 
 ## Documentation
 
-The project includes comprehensive documentation to help you understand and use the system:
+The following documentation is available:
 
-### API Documentation
+- Markdown documentation: [backend/app/docs/api_documentation.md](backend/app/docs/api_documentation.md)
 
-Detailed API documentation is available in:
-- Interactive OpenAPI docs: http://localhost:8000/docs (when running the application)
-- Markdown documentation: [src/mlopspropmgmt/docs/api_documentation.md](src/mlopspropmgmt/docs/api_documentation.md)
+Additional resources:
 
-### Implementation and Development
-
-- [Implementation Guide](src/mlopspropmgmt/docs/implementation_guide.md) - Best practices for implementing new features
-- [Architecture Overview](src/mlopspropmgmt/docs/assets/architecture.md) - System architecture and component design
+- [Implementation Guide](backend/app/docs/implementation_guide.md) - Best practices for implementing new features
+- [Architecture Overview](backend/app/docs/assets/architecture.md) - System architecture and component design
 
 ### Documentation Index
 
-For a complete list of available documentation, see the [Documentation Index](src/mlopspropmgmt/docs/index.md).
+For a complete list of available documentation, see the [Documentation Index](backend/app/docs/index.md).
 
 ## Development
 
@@ -170,22 +166,22 @@ This project uses pre-commit hooks to enforce code style and catch common issues
 
    - Fix docstring formatting issues:
      ```bash
-     python .github/scripts/fix_docstrings.py src/mlopspropmgmt
+     python .github/scripts/fix_docstrings.py backend/app
      ```
 
    - Fix f-strings without placeholders:
      ```bash
-     python .github/scripts/fix_fstrings.py src/mlopspropmgmt
+     python .github/scripts/fix_fstrings.py backend/app
      ```
 
    - Get suggestions for missing type annotations:
      ```bash
-     python .github/scripts/add_type_hints.py src/mlopspropmgmt
+     python .github/scripts/add_type_hints.py backend/app
      ```
 
    - Find complex functions that need refactoring:
      ```bash
-     python .github/scripts/find_complex_functions.py src/mlopspropmgmt
+     python .github/scripts/find_complex_functions.py backend/app
      ```
 
 4. For complex functions with high cyclomatic complexity:
@@ -216,3 +212,47 @@ git commit --no-verify -m "Your commit message"
 ```
 
 However, aim to gradually fix all linting issues to maintain code quality.
+
+## Getting Started with AWS Cognito Authentication
+
+This project has been restructured to integrate AWS Cognito authentication. The main changes include:
+
+1. **New Directory Structure**:
+   - Backend code is now in `backend/app/`
+   - Frontend React application is in `frontend/`
+
+2. **Authentication Flow**:
+   - AWS Cognito is used for user authentication
+   - JWT tokens are securely stored in HTTP-only cookies
+   - Protected routes require valid JWT verification
+
+### Setup AWS Cognito
+
+1. Create a User Pool in AWS Cognito
+2. Configure an App Client with the hosted UI
+3. Update configuration in:
+   - `backend/.env`
+   - `frontend/public/static/config.dev.json`
+
+### Starting the Application
+
+Use these commands to start the application:
+
+```bash
+# Start the backend API server
+make start-backend
+
+# Start the frontend development server
+make start-frontend
+
+# Start both at once
+make start-all
+```
+
+### Authentication Flow
+
+1. User navigates to the login page
+2. User clicks "Sign In" and is redirected to AWS Cognito Hosted UI
+3. After successful authentication, Cognito redirects to the backend callback endpoint
+4. The backend exchanges the authorization code for tokens and sets secure cookies
+5. Protected routes verify the JWT token on each request

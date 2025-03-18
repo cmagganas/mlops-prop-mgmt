@@ -8,9 +8,9 @@ from unittest.mock import (
 
 import pytest
 
-from mlopspropmgmt.db.report import ReportService
-from mlopspropmgmt.models.payment import PaymentType
-from mlopspropmgmt.models.report import MissingPaymentPeriod
+from backend.app.db.report import ReportService
+from backend.app.models.payment import PaymentType
+from backend.app.models.report import MissingPaymentPeriod
 
 
 @pytest.fixture
@@ -35,13 +35,13 @@ def test_calculate_months_between(report_service):
     assert report_service.calculate_months_between(start_date, end_date) == 7
 
     # Test with future end date (should use today's date)
-    with patch("mlopspropmgmt.db.report.date") as mock_date:
+    with patch("backend.app.db.report.date") as mock_date:
         mock_date.today.return_value = datetime.date(2022, 3, 15)
         # Should calculate from Jan 15 to Mar 15 (3 months)
         assert report_service.calculate_months_between(start_date, datetime.date(2023, 1, 1)) == 3
 
     # Test with future start date (should return 0)
-    with patch("mlopspropmgmt.db.report.date") as mock_date:
+    with patch("backend.app.db.report.date") as mock_date:
         mock_date.today.return_value = datetime.date(2022, 1, 1)
         future_start = datetime.date(2022, 2, 1)
         assert report_service.calculate_months_between(future_start, end_date) == 0
@@ -50,7 +50,7 @@ def test_calculate_months_between(report_service):
 def test_identify_missing_payment_periods(report_service):
     """Test identify_missing_payment_periods identifies correct missing months."""
     # Mock today's date to have consistent test results
-    with patch("mlopspropmgmt.db.report.date") as mock_date:
+    with patch("backend.app.db.report.date") as mock_date:
         mock_date.today.return_value = datetime.date(2023, 3, 15)
 
         # Create a lease starting 3 months ago
@@ -83,10 +83,10 @@ def test_identify_missing_payment_periods(report_service):
             assert period.month_name in ["January", "March"]
 
 
-@patch("mlopspropmgmt.db.report.tenant_repository")
-@patch("mlopspropmgmt.db.report.unit_repository")
-@patch("mlopspropmgmt.db.report.lease_repository")
-@patch("mlopspropmgmt.db.report.payment_repository")
+@patch("backend.app.db.report.tenant_repository")
+@patch("backend.app.db.report.unit_repository")
+@patch("backend.app.db.report.lease_repository")
+@patch("backend.app.db.report.payment_repository")
 def test_generate_tenant_balance_report(
     mock_payment_repo, mock_lease_repo, mock_unit_repo, mock_tenant_repo, report_service
 ):

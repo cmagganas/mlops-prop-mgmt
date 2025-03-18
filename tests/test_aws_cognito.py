@@ -7,8 +7,8 @@ import boto3
 import pytest
 from moto import mock_aws
 
-from mlopspropmgmt.auth.cognito import CognitoAuth
-from mlopspropmgmt.config import get_settings
+from backend.app.auth.cognito import CognitoAuth
+from backend.app.config import get_settings
 
 
 @pytest.fixture
@@ -112,7 +112,7 @@ def test_cognito_token_validation(aws_credentials):
     with mock_aws():
         # Mock JWT functions since Moto doesn't handle JWT validation
         with patch("jwt.decode") as mock_decode, patch("jwt.get_unverified_header") as mock_get_header, patch(
-            "mlopspropmgmt.auth.cognito.CognitoAuth.get_jwks"
+            "backend.app.auth.cognito.CognitoAuth.get_jwks"
         ) as mock_get_jwks:
 
             # Setup mocks

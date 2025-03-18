@@ -53,7 +53,7 @@ function test:quick {
 
 # execute tests against the installed package; assumes the wheel is already installed
 function test:ci {
-    INSTALLED_PKG_DIR="$(python -c 'import mlopspropmgmt; print(mlopspropmgmt.__path__[0])')"
+    INSTALLED_PKG_DIR="$(python -c 'import backend.app; print(backend.app.__path__[0])')"
     # in CI, we must calculate the coverage for the installed package, not the src/ folder
     COVERAGE_DIR="$INSTALLED_PKG_DIR" run-tests
 }
@@ -67,7 +67,7 @@ function run-tests {
 
     # execute the tests, calculate coverage, and generate coverage reports in the test-reports dir
     python -m pytest ${@:-"$THIS_DIR/tests/"} \
-        --cov "${COVERAGE_DIR:-$THIS_DIR/src}" \
+        --cov "${COVERAGE_DIR:-$THIS_DIR/backend}" \
         --cov-report html \
         --cov-report term \
         --cov-report xml \
@@ -175,7 +175,37 @@ function run {
     echo "Starting FastAPI application..."
     echo "View the API docs at: http://localhost:8000/docs"
     echo "View the HTML reports at: http://localhost:8000/report-viewer/"
-    python -m uvicorn src.mlopspropmgmt.main:app --reload --host 0.0.0.0 --port 8000
+    python -m uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
+}
+
+function start_development_server() {
+    echo "Starting FastAPI development server..."
+    # Run the application with auto-reload for development
+    python -m uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
+}
+
+function start_application() {
+    if [[ -d ".venv" ]]; then
+        echo "Using virtual environment at .venv"
+        source .venv/bin/activate
+    fi
+
+    echo "Starting application..."
+
+    if [[ "$APP_ENV" == "development" ]]; then
+        start_development_server
+    else
+        # For production, first check if the package is installed
+        if ! python -c "import backend.app" &>/dev/null; then
+            echo "Package not installed. Please install it first:"
+            echo "pip install -e ."
+            exit 1
+        fi
+
+        INSTALLED_PKG_DIR="$(python -c 'import backend.app; print(backend.app.__path__[0])')"
+        echo "Using installed package at: $INSTALLED_PKG_DIR"
+        python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
+    fi
 }
 
 TIMEFORMAT="Task completed in %3lR"
