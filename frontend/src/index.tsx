@@ -49,7 +49,7 @@ const AuthApp = () => {
    * The backend will:
    * 1. Clear the id_token cookie
    * 2. Redirect back to the frontend
-   * 
+   *
    * Note: We don't use Cognito's logout endpoints directly as they don't work
    * consistently across different Cognito configurations. Instead, we rely on
    * the cookie-based authentication approach where removing the cookie is sufficient.

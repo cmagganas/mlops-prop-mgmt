@@ -21,14 +21,12 @@ from .cognito import CognitoAuth
 
 # Cache for JWKS
 _jwks_cache = None
-_jwks_cache_timestamp = 0
+_jwks_cache_timestamp = 0.0
 _JWKS_CACHE_TTL = 3600  # 1 hour
 
 
 async def get_jwks() -> Dict:
-    """
-    Fetch JWKS (JSON Web Key Set) from Cognito and cache it
-    """
+    """Fetch JWKS (JSON Web Key Set) from Cognito and cache it."""
     global _jwks_cache, _jwks_cache_timestamp
 
     current_time = time.time()
@@ -80,7 +78,7 @@ async def verify_jwt_token(id_token: Optional[str] = Cookie(None)) -> Dict:
         return claims
 
     except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")
+        raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}") from e
 
 
 # Set up standard dependencies

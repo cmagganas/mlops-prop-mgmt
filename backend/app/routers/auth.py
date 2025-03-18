@@ -1,9 +1,11 @@
+import socket
+import traceback
 from typing import (
     Dict,
     Optional,
 )
-from urllib.parse import quote
 
+import httpx
 from fastapi import (
     APIRouter,
     Depends,
@@ -36,21 +38,21 @@ router = APIRouter(
 
 @router.get("/login")
 async def login():
-    """Redirect to Cognito hosted UI for login"""
+    """Redirect to Cognito hosted UI for login."""
     auth = get_cognito_auth()
     return RedirectResponse(url=auth.get_login_url())
 
 
 @router.get("/login-authlib")
 async def login_authlib():
-    """Alternative login using authlib"""
+    """Alternative login using authlib."""
     auth_url = await get_authorization_url()
     return RedirectResponse(url=auth_url)
 
 
 @router.get("/callback")
 async def callback(request: Request, code: str = None, error: str = None, error_description: str = None):
-    """Handle the OAuth callback from Cognito"""
+    """Handle the OAuth callback from Cognito."""
     # Handle error response from Cognito
     if error:
         error_msg = f"Authentication error: {error}"
@@ -88,17 +90,17 @@ async def callback(request: Request, code: str = None, error: str = None, error_
     except Exception as e:
         error_detail = f"Error processing callback: {str(e)}"
         print(f"Debug - Callback error: {error_detail}")
-        raise HTTPException(status_code=400, detail=error_detail)
+        raise HTTPException(status_code=400, detail=error_detail) from e
 
 
 @router.get("/logout")
 async def logout():
     """Log the user out by clearing cookies and redirecting to the frontend directly.
-    
+
     Implementation details:
     1. Clears the id_token cookie which contains the JWT that authenticates the user
     2. Redirects back to the frontend application
-    
+
     Note:
     - We specifically avoid using Cognito's built-in logout endpoints (/logout or /oauth2/logout)
       as they don't work consistently across different AWS Cognito configurations and versions.
@@ -116,7 +118,7 @@ async def logout():
 
 @router.get("/user")
 async def get_user_info(user: Dict = Depends(get_current_user)):
-    """Get information about the authenticated user"""
+    """Get information about the authenticated user."""
     return {
         "user_id": user.get("user_id"),
         "email": user.get("email"),
@@ -128,7 +130,7 @@ async def get_user_info(user: Dict = Depends(get_current_user)):
 
 @router.get("/userinfo-authlib")
 async def get_userinfo_authlib(id_token: Optional[str] = None):
-    """Get user info using Authlib from token"""
+    """Get user info using Authlib from token."""
     try:
         if not id_token:
             raise HTTPException(status_code=401, detail="No token provided")
@@ -136,7 +138,7 @@ async def get_userinfo_authlib(id_token: Optional[str] = None):
         user_info = await get_userinfo(access_token=id_token)
         return JSONResponse(content=user_info)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error fetching user info: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Error fetching user info: {str(e)}") from e
 
 
 @router.get("/test")
@@ -204,11 +206,6 @@ async def debug_settings():
 @router.get("/diagnostic")
 async def run_diagnostic():
     """Advanced diagnostic endpoint that tests connectivity to Cognito endpoints."""
-    import socket
-    import traceback
-
-    import httpx
-
     results = {
         "env_loaded": True,
         "config": {

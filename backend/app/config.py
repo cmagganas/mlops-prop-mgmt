@@ -31,10 +31,7 @@ class Settings(BaseSettings):
     cognito_region: str = Field(default="", description="Cognito region")
     cognito_user_pool_id: str = Field(default="", description="Cognito User Pool ID")
     cognito_client_id: str = Field(default="", description="Cognito App Client ID")
-    cognito_client_secret: Optional[str] = Field(
-        default=None,
-        description="Cognito App Client Secret"
-    )
+    cognito_client_secret: Optional[str] = Field(default=None, description="Cognito App Client Secret")
     # This should be ONLY the domain prefix (e.g., "mydomain"), not the full URL
     cognito_domain: str = Field(default="", description="Cognito Domain or domain prefix")
     cognito_scopes: str = Field(default="openid email profile", description="Space-separated OAuth scopes")
@@ -56,11 +53,11 @@ class Settings(BaseSettings):
     def cognito_scopes_list(self) -> List[str]:
         """Convert space-separated scopes string to list."""
         return self.cognito_scopes.split()
-    
+
     @property
     def cognito_domain_url(self) -> str:
         """Return the full Cognito domain URL.
-        
+
         Properly handles different domain formats:
         1. Empty - uses the cognito-idp endpoint with user pool ID
         2. Full URL with protocol (https://example.com) - used as-is
@@ -69,37 +66,39 @@ class Settings(BaseSettings):
         """
         if not self.cognito_domain:
             return f"https://cognito-idp.{self.cognito_region}.amazonaws.com/{self.cognito_user_pool_id}"
-        
+
         # CRITICAL FIX: check if the domain ALREADY contains the full Cognito URL format
         # to prevent double-formatting that causes DNS errors
-        if '.auth.' in self.cognito_domain and '.amazoncognito.com' in self.cognito_domain:
-            return f"https://{self.cognito_domain}" if not self.cognito_domain.startswith('http') else self.cognito_domain
-            
+        if ".auth." in self.cognito_domain and ".amazoncognito.com" in self.cognito_domain:
+            return (
+                f"https://{self.cognito_domain}" if not self.cognito_domain.startswith("http") else self.cognito_domain
+            )
+
         # Check if it's another kind of full domain (contains dots)
-        if '.' in self.cognito_domain:
+        if "." in self.cognito_domain:
             # Ensure it has a protocol
-            if '://' not in self.cognito_domain:
+            if "://" not in self.cognito_domain:
                 return f"https://{self.cognito_domain}"
             return self.cognito_domain
-        
+
         # Otherwise, treat it as a Cognito domain prefix only
         return f"https://{self.cognito_domain}.auth.{self.cognito_region}.amazoncognito.com"
-    
+
     @property
     def cognito_auth_endpoint(self) -> str:
         """Return the full Cognito authorization endpoint URL."""
         return f"{self.cognito_domain_url}/oauth2/authorize"
-    
+
     @property
     def cognito_token_endpoint(self) -> str:
         """Return the full Cognito token endpoint URL."""
         return f"{self.cognito_domain_url}/oauth2/token"
-    
+
     @property
     def cognito_logout_endpoint(self) -> str:
         """Return the full Cognito logout endpoint URL."""
         return f"{self.cognito_domain_url}/oauth2/logout"
-    
+
     @property
     def cognito_jwks_uri(self) -> str:
         """Return the JWKS URI for token validation."""
@@ -115,7 +114,7 @@ class Settings(BaseSettings):
             ("cognito_client_id", self.cognito_client_id),
             ("cognito_region", self.cognito_region),
         ]
-        
+
         missing = [name for name, value in required_settings if not value]
         if missing and not self.debug:
             # Only enforce in non-debug mode

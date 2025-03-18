@@ -1,6 +1,6 @@
 import { CognitoUser, CognitoIdToken } from "amazon-cognito-identity-js";
 import { Amplify, Auth } from "aws-amplify";
-import { PropertyManagementConfig } from "../config";
+import { PropertyManagementConfig, defaultConfig } from "../config";
 
 export const configureAmplifyCognitoAuthSingleton = (config: PropertyManagementConfig) => {
   let amplifyConfig = {
@@ -24,9 +24,8 @@ export const configureAmplifyCognitoAuthSingleton = (config: PropertyManagementC
 };
 
 export const signOut = () => {
-  Auth.signOut();
-  // reload the page
-  window.location.reload();
+  // Instead of using Amplify's signOut, redirect to backend logout endpoint
+  window.location.href = `${defaultConfig.backend_api_url}/auth/logout`;
 };
 
 // this redirects the user to a "hosted ui" where they can choose between
