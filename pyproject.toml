@@ -10,22 +10,15 @@ readme = "README.md"
 requires-python = ">=3.7"
 license = { text = "MIT" }
 dependencies = [
-    "fastapi>=0.103.0",
-    "uvicorn>=0.23.2",
-    "sqlalchemy>=2.0.0",
-    "pydantic>=2.3.0",
-    "python-jose>=3.3.0",
+    # Core framework and API
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.29.0",
+    "pydantic>=2.6.0",
+    "pydantic-settings>=2.2.0",
+    "python-multipart>=0.0.9",
+    "httpx>=0.25.0",
+    "jinja2>=3.1.0",
     "python-dotenv>=1.0.0",
-    "alembic>=1.12.0",
-    "python-multipart>=0.0.6",
-    "boto3>=1.28.0",
-    "httpx>=0.24.0",
-    "asyncpg>=0.28.0",
-    "passlib>=1.7.4",
-    "requests>=2.31.0",
-    "pydantic-settings>=2.0.0",
-    "jinja2>=3.0.0",
-    "python-jose[cryptography]>=3.3.0"
 ]
 classifiers = ["Programming Language :: Python :: 3"]
 keywords = ["property management", "fastapi", "aws"]
@@ -39,8 +32,44 @@ version = { file = "version.txt" }
 
 # optional dependencies can be installed with square brackets, e.g. `pip install my-package[test,static-code-qa]`
 [project.optional-dependencies]
-test = ["pytest", "pytest-cov", "pytest-asyncio"]
-release = ["build", "twine"]
+# Authentication and authorization
+auth = [
+    "python-jose[cryptography]>=3.3.0",
+    "authlib>=1.5.0",
+    "passlib>=1.7.4",
+]
+
+# Database infrastructure
+database = [
+    "sqlalchemy>=2.0.0",
+    "alembic>=1.12.0",
+    "asyncpg>=0.28.0",
+]
+
+# AWS integration
+aws = [
+    "boto3>=1.28.0",
+]
+
+# HTTP client and API tools
+http-client = [
+    "requests>=2.31.0",
+]
+
+# Testing libraries
+test = [
+    "pytest",
+    "pytest-cov",
+    "pytest-asyncio"
+]
+
+# Release and build tools
+release = [
+    "build",
+    "twine"
+]
+
+# Code quality tools
 static-code-qa = [
     "pre-commit",
     "pylint",
@@ -51,12 +80,16 @@ static-code-qa = [
     "Flake8-pyproject",
     "radon",
 ]
-# Installing dev depenendencies in your virtual env makes it so that during development VS Code can
-# - surface linting errors
-# - automatically apply formatting
-# - show enhanced autocompletion for stubs libraries
-# See .vscode/settings.json to see how VS Code is configured to use these tools
-dev = ["mlops-prop-mgmt[test,release,static-code-qa]"]
+
+# Full production setup (everything except dev tools)
+prod = [
+    "mlops-prop-mgmt[auth,database,aws,http-client]",
+]
+
+# Full development setup
+dev = [
+    "mlops-prop-mgmt[auth,database,aws,http-client,test,release,static-code-qa]",
+]
 
 [build-system]
 # Minimum requirements for the build system to execute.

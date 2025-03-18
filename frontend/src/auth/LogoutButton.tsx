@@ -10,12 +10,12 @@ interface LogoutButtonProps {
  * Logout Button Component
  * Redirects to Cognito logout endpoint on click
  */
-const LogoutButton: React.FC<LogoutButtonProps> = ({ 
-  className = '', 
-  label = 'Logout' 
+const LogoutButton: React.FC<LogoutButtonProps> = ({
+  className = '',
+  label = 'Logout'
 }) => {
   return (
-    <button 
+    <button
       className={`logout-button ${className}`}
       onClick={() => signOut()}
     >
@@ -24,4 +24,4 @@ const LogoutButton: React.FC<LogoutButtonProps> = ({
   );
 };
 
-export default LogoutButton; 
+export default LogoutButton;

@@ -48,7 +48,7 @@ const Home = () => {
   return (
     <div className="home-page">
       <h1>Property Management Dashboard</h1>
-      
+
       {user ? (
         <div className="user-info">
           <h2>Welcome, {user.username || user.email || 'User'}!</h2>
@@ -101,4 +101,4 @@ const MainApp = () => {
   );
 };
 
-export default MainApp; 
+export default MainApp;

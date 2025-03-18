@@ -4,12 +4,10 @@ This module provides services for AWS Cognito authentication,
 including code exchange for JWT tokens and token validation.
 """
 
-import base64
 import time
 from typing import (
     Any,
     Dict,
-    Optional,
 )
 from urllib.parse import quote
 
@@ -41,8 +39,8 @@ class CognitoAuth:
     def get_login_url(self) -> str:
         """Generate the Cognito login URL."""
         # URL encode each scope individually and join with spaces
-        encoded_scopes = ' '.join(quote(scope) for scope in self.settings.cognito_scopes_list)
-        
+        encoded_scopes = " ".join(quote(scope) for scope in self.settings.cognito_scopes_list)
+
         return (
             f"{self.settings.cognito_auth_endpoint}"
             f"?client_id={self.settings.cognito_client_id}"
@@ -54,12 +52,12 @@ class CognitoAuth:
     async def exchange_code_for_tokens(self, auth_code: str) -> Dict[str, Any]:
         """Exchange authorization code for JWT tokens from Cognito."""
         token_endpoint = self.settings.cognito_token_endpoint
-        
+
         # Headers
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
         }
-        
+
         # Request body
         data = {
             "grant_type": "authorization_code",
@@ -67,7 +65,7 @@ class CognitoAuth:
             "code": auth_code,
             "redirect_uri": self.settings.redirect_uri,
         }
-        
+
         # Add client_secret to the request if it's configured
         if self.settings.cognito_client_secret:
             data["client_secret"] = self.settings.cognito_client_secret

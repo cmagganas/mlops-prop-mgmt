@@ -14,8 +14,25 @@ MINIMUM_TEST_COVERAGE_PERCENT=0
 # --- Task Functions --- #
 ##########################
 
-# install core and development Python dependencies into the currently activated venv
-function install {
+# Copy environment variables from root .env to frontend/.env
+function sync_env {
+    echo "Syncing environment variables from root .env to frontend/.env..."
+
+    # Check if root .env exists
+    if [ ! -f "$THIS_DIR/.env" ]; then
+        echo "Error: .env file not found in $THIS_DIR. Please create it from .env.example first."
+        exit 1
+    fi
+
+    # Extract and write only REACT_APP_ variables to frontend/.env
+    grep "^REACT_APP_" "$THIS_DIR/.env" > "$THIS_DIR/frontend/.env"
+
+    echo "Environment variables synced successfully!"
+}
+
+# install backend Python dependencies into the currently activated venv
+function install_backend {
+    echo "Installing backend dependencies..."
     # Check if pyproject.toml exists in the current directory
     if [ ! -f "$THIS_DIR/pyproject.toml" ]; then
         echo "Error: pyproject.toml not found in $THIS_DIR. Make sure you're running this script from the project root."
@@ -23,15 +40,152 @@ function install {
     fi
 
     python -m pip install --upgrade pip
-    python -m pip install --editable "$THIS_DIR/[dev]"
 
-    # Install pre-commit hooks if pre-commit is installed
-    if command -v pre-commit >/dev/null 2>&1; then
+    # Installation profiles
+    local install_type=${1:-"dev"}
+
+    case "$install_type" in
+        "dev")
+            # Full development installation with all tools
+            echo "Installing development dependencies (full)..."
+            python -m pip install --editable "$THIS_DIR/[dev]"
+            ;;
+        "prod")
+            # Production dependencies (everything except dev tools)
+            echo "Installing production dependencies..."
+            python -m pip install --editable "$THIS_DIR/[prod]"
+            ;;
+        "minimal")
+            # Minimal installation with just core and auth
+            echo "Installing minimal dependencies (core + auth)..."
+            python -m pip install --editable "$THIS_DIR/[auth]"
+            ;;
+        "custom")
+            # Get custom component list
+            read -p "Enter component list (comma-separated, e.g. 'auth,database,aws'): " components
+            echo "Installing custom components: $components"
+            python -m pip install --editable "$THIS_DIR/[$components]"
+            ;;
+        *)
+            # Specific component
+            echo "Installing component: $install_type"
+            python -m pip install --editable "$THIS_DIR/[$install_type]"
+            ;;
+    esac
+
+    # Install pre-commit hooks if pre-commit is installed and we're in dev mode
+    if [[ "$install_type" == "dev" ]] && command -v pre-commit >/dev/null 2>&1; then
         echo "Setting up pre-commit hooks..."
         pre-commit install
-    else
+    elif [[ "$install_type" == "dev" ]]; then
         echo "pre-commit not found. Hooks not installed. Run 'pip install pre-commit' and then 'pre-commit install' to set up hooks."
     fi
+
+    echo "Backend installation completed for profile: $install_type"
+}
+
+# Install frontend Node.js dependencies
+function install_frontend {
+    echo "Installing frontend dependencies..."
+    if [ ! -d "$THIS_DIR/frontend" ]; then
+        echo "Error: frontend directory not found in $THIS_DIR. Make sure you're running this script from the project root."
+        exit 1
+    fi
+
+    # Check if npm is installed
+    if ! command -v npm &> /dev/null; then
+        echo "Error: npm is required but not found. Please install Node.js and npm."
+        exit 1
+    fi
+
+    # Sync environment variables before installing
+    sync_env
+
+    cd "$THIS_DIR/frontend" && npm install
+    echo "Frontend dependencies installed successfully"
+}
+
+# remove obsolete requirements files since we're using pyproject.toml
+function cleanup_requirements {
+    echo "Checking for obsolete requirements files..."
+
+    # List of files to check
+    files=(
+        "$THIS_DIR/backend/requirements.txt"
+        "$THIS_DIR/backend/requirements.dev.txt"
+    )
+
+    for file in "${files[@]}"; do
+        if [ -f "$file" ]; then
+            echo "Found obsolete file: $file"
+            read -p "Remove it? (y/n): " choice
+            if [[ "$choice" == "y" || "$choice" == "Y" ]]; then
+                rm "$file"
+                echo "Removed: $file"
+            else
+                echo "Kept: $file"
+            fi
+        fi
+    done
+
+    echo "Requirements cleanup completed."
+}
+
+# execute after installation to ensure project structure is clean
+function post_install_cleanup {
+    cleanup_requirements
+}
+
+# Update the install function to run post-install cleanup
+function install {
+    local install_type=${1:-"dev"}
+
+    # Handle the special case for custom component selection
+    if [[ "$install_type" == "custom" ]]; then
+        install_backend "custom"
+    else
+        install_backend "$install_type"
+    fi
+
+    install_frontend
+
+    # Ask if user wants to run cleanup
+    echo ""
+    read -p "Run post-install cleanup to remove obsolete files? (y/n): " run_cleanup
+    if [[ "$run_cleanup" == "y" || "$run_cleanup" == "Y" ]]; then
+        post_install_cleanup
+    fi
+
+    echo "All dependencies installed successfully!"
+}
+
+# Display help for installation options
+function install_help {
+    echo "=================================="
+    echo "Installation Options"
+    echo "=================================="
+    echo "Usage: ./run.sh install [OPTION]"
+    echo ""
+    echo "Available options:"
+    echo "  dev             Full development setup with all dependencies and tools (default)"
+    echo "  prod            Production dependencies only (no test/dev tools)"
+    echo "  minimal         Minimal installation with core functionality and auth only"
+    echo "  custom          Interactive prompt to select specific components"
+    echo "  auth            Authentication components only"
+    echo "  database        Database components only"
+    echo "  aws             AWS integration components only"
+    echo "  http-client     HTTP client components only"
+    echo "  static-code-qa  Code quality tools only"
+    echo "  test            Testing tools only"
+    echo ""
+    echo "Examples:"
+    echo "  ./run.sh install               # Install dev dependencies (default)"
+    echo "  ./run.sh install prod          # Install production dependencies"
+    echo "  ./run.sh install auth,database # Install auth and database components only"
+    echo "  ./run.sh install custom        # Interactive component selection"
+    echo ""
+    echo "Note: Frontend dependencies are always installed by default."
+    echo "=================================="
 }
 
 # run linting, formatting, and other static code quality tools
@@ -167,15 +321,54 @@ function try-load-dotenv {
 function help {
     echo "$0 <task> <args>"
     echo "Tasks:"
-    compgen -A function | cat -n
+    compgen -A function | grep -v "^_" | sort | cat -n
+    echo ""
+    echo "For detailed installation options: $0 install_help"
 }
 
 # run the FastAPI application
-function run {
+function run_backend {
     echo "Starting FastAPI application..."
     echo "View the API docs at: http://localhost:8000/docs"
     echo "View the HTML reports at: http://localhost:8000/report-viewer/"
     python -m uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
+}
+
+# run the frontend React application
+function run_frontend {
+    echo "Starting React frontend application..."
+    echo "View the frontend at: http://localhost:3000"
+    cd "$THIS_DIR/frontend" && npm start
+}
+
+# run both backend and frontend in parallel
+function run_all {
+    echo "Starting both backend and frontend applications..."
+    # Use & to run in background and wait to keep both processes running
+    run_backend & run_frontend &
+    wait
+}
+
+# run the application (backend, frontend, or both)
+function run {
+    local component=${1:-"backend"}
+
+    case "$component" in
+        backend)
+            run_backend
+            ;;
+        frontend)
+            run_frontend
+            ;;
+        all)
+            run_all
+            ;;
+        *)
+            echo "Unknown component: $component"
+            echo "Usage: $0 run [backend|frontend|all]"
+            exit 1
+            ;;
+    esac
 }
 
 function start_development_server() {

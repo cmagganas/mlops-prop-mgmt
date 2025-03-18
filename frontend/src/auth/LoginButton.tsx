@@ -10,12 +10,12 @@ interface LoginButtonProps {
  * Login Button Component
  * Redirects to Cognito login page on click
  */
-const LoginButton: React.FC<LoginButtonProps> = ({ 
-  className = '', 
-  label = 'Login' 
+const LoginButton: React.FC<LoginButtonProps> = ({
+  className = '',
+  label = 'Login'
 }) => {
   return (
-    <button 
+    <button
       className={`login-button ${className}`}
       onClick={() => signInWithCognito()}
     >
@@ -24,4 +24,4 @@ const LoginButton: React.FC<LoginButtonProps> = ({
   );
 };
 
-export default LoginButton; 
+export default LoginButton;
