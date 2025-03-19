@@ -1,17 +1,21 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
-from .config import settings
-from .routers import auth as auth_router
-from .routers import lease as lease_router
-from .routers import payment as payment_router
-from .routers import property as property_router
-from .routers import report as report_router
-from .routers import report_viewer as report_viewer_router
-from .routers import tenant as tenant_router
-from .routers import unit as unit_router
+from api.config import settings
+from api.routers import auth as auth_router
+from api.routers import lease as lease_router
+from api.routers import payment as payment_router
+from api.routers import property as property_router
+from api.routers import report as report_router
+from api.routers import report_viewer as report_viewer_router
+from api.routers import tenant as tenant_router
+from api.routers import unit as unit_router
+
+THIS_DIR = Path(__file__).parent
 
 
 @asynccontextmanager
@@ -62,12 +66,23 @@ def create_app() -> FastAPI:
     app.include_router(report_viewer_router.router)
 
     # Root endpoint with health check
-    @app.get("/", tags=["health"])
+    @app.get("/healthz", tags=["health"])
     async def health_check() -> dict:
         """Check API health status."""
         return {"status": "healthy", "message": f"{settings.app_name} is running"}
 
+    built_fontend_dir = THIS_DIR / "static"
+    app.mount(
+        "/",
+        StaticFiles(directory=str(built_fontend_dir), html=True),
+        name="frontend",
+    )
+
     return app
 
 
-app = create_app()
+if __name__ == "__main__":
+    import uvicorn
+
+    app = create_app()
+    uvicorn.run(app, host="0.0.0.0", port=8000)

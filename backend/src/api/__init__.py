@@ -6,8 +6,7 @@ __version__ = "0.1.0"
 
 from .config import settings
 from .main import (
-    app,
     create_app,
 )
 
-__all__ = ["app", "create_app", "settings", "__version__"]
+__all__ = ["create_app", "settings", "__version__"]

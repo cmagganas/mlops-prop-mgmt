@@ -29,10 +29,11 @@ class Settings(BaseSettings):
 
     # Auth settings
     aws_region: str = Field(default="", description="AWS region")
-    cognito_region: str = Field(default="", description="Cognito region")
-    cognito_user_pool_id: str = Field(default="", description="Cognito User Pool ID")
-    cognito_client_id: str = Field(default="", description="Cognito App Client ID")
+    cognito_region: str = Field(..., description="Cognito region")
+    cognito_user_pool_id: str = Field(..., description="Cognito User Pool ID")
+    cognito_client_id: str = Field(..., description="Cognito App Client ID")
     cognito_client_secret: Optional[str] = Field(default=None, description="Cognito App Client Secret")
+
     # This should be ONLY the domain prefix (e.g., "mydomain"), not the full URL
     cognito_domain: str = Field(default="", description="Cognito Domain or domain prefix")
     cognito_scopes: str = Field(default="openid email profile", description="Space-separated OAuth scopes")
@@ -46,8 +47,8 @@ class Settings(BaseSettings):
     cookie_secure: bool = Field(default=False, description="Set cookies as secure (HTTPS only)")
 
     model_config = {
-        "env_file": ".env",
-        "env_prefix": "PROPMGMT_",  # PROPMGMT_DEBUG, PROPMGMT_HOST, etc.
+        # "env_file": ".env",
+        "env_prefix": "REACT_APP_",  # PROPMGMT_DEBUG, PROPMGMT_HOST, etc.
     }
 
     @property
@@ -145,7 +146,7 @@ def get_settings() -> Settings:
 
         Settings: Application settings"""
     # Look for the .env file in the parent directory
-    env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), '.env')
+    env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), ".env")
     return Settings(_env_file=env_path)
 
 
