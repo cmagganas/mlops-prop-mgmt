@@ -14,6 +14,26 @@ MINIMUM_TEST_COVERAGE_PERCENT=0
 # --- Task Functions --- #
 ##########################
 
+
+function build {
+    # build the frontend to static, minified files
+    # export .env file so that the right values get substituted into the frontend
+    # during the build, e.g. the cognito user pool id
+    rm -rf "$THIS_DIR/frontend/build" || true
+    source "$THIS_DIR/frontend/.env"
+    cd "$THIS_DIR/frontend" && npm run build
+
+    # copy them into the backend dir to be packaged
+    rm -rf "$THIS_DIR/backend/src/api/static" || true
+    cp -r "$THIS_DIR/frontend/build" "$THIS_DIR/backend/src/api/static"
+}
+
+function serve {
+    cd "$THIS_DIR/backend"
+    source "$THIS_DIR/frontend/.env"
+    uv run -m api.main
+}
+
 # Copy environment variables from root .env to frontend/.env
 function sync_env {
     echo "Syncing environment variables from root .env to frontend/.env..."
@@ -251,10 +271,6 @@ function serve-coverage-report {
     python -m http.server --directory "$THIS_DIR/test-reports/htmlcov/" 8000
 }
 
-# build a wheel and sdist from the Python source code
-function build {
-    python -m build --sdist --wheel "$THIS_DIR/"
-}
 
 function release:test {
     lint
