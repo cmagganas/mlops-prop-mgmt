@@ -46,8 +46,6 @@ uv run -m api.main
 
 Visit http://localhost:8000 to access the application.
 
-## Development
-
 ### Project Structure
 ```
 mlops-prop-mgmt/
@@ -63,72 +61,7 @@ mlops-prop-mgmt/
 └── pyproject.toml         # Project dependencies
 ```
 
-### Running Tests
-```bash
-uv pip install -e ".[test]"
-pytest
-```
-
-## Deployment
-
-The application can be deployed as an AWS Lambda function with API Gateway:
-
-   - Find complex functions that need refactoring:
-     ```bash
-     python .github/scripts/find_complex_functions.py backend/app
-     ```
-
-4. For complex functions with high cyclomatic complexity:
-   - Consider breaking them down into smaller functions
-   - Extract repeated logic into helper functions
-   - Use more descriptive variable names to improve readability
-
-5. Add type annotations to function signatures to improve type checking:
-   ```python
-   def get_property_report(property_id: str) -> dict:
-       """Get a property report.
-
-       Args:
-           property_id: The ID of the property
-
-       Returns:
-           A dictionary containing the property report data
-       """
-       # Function implementation
-   ```
-
-### Temporarily Bypassing Pre-commit Hooks
-
-If you need to commit changes while still working on fixing linting issues:
-
-```bash
-git commit --no-verify -m "Your commit message"
-```
-
-However, aim to gradually fix all linting issues to maintain code quality.
-
-## Getting Started with AWS Cognito Authentication
-
-This project has been restructured to integrate AWS Cognito authentication. The main changes include:
-
-1. **New Directory Structure**:
-   - Backend code is now in `backend/app/`
-   - Frontend React application is in `frontend/`
-
-2. **Authentication Flow**:
-   - AWS Cognito is used for user authentication
-   - JWT tokens are securely stored in HTTP-only cookies
-   - Protected routes require valid JWT verification
-
-### Setup AWS Cognito
-
-1. Create a User Pool in AWS Cognito
-2. Configure an App Client with the hosted UI
-3. Update configuration in:
-   - `backend/.env`
-   - `frontend/public/static/config.dev.json`
-
-### Starting the Application
+### do these steps still work?
 
 Use these commands to start the application:
 
@@ -152,8 +85,7 @@ make start-all
 5. Protected routes verify the JWT token on each request
 
 
-
-Next steps
+### Next steps
 
 1. Create an `index.py` or `aws_lambda_handler.py` file that looks like this
 
