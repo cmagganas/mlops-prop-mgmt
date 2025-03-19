@@ -1,10 +1,6 @@
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-
 from api.config import settings
 from api.routers import auth as auth_router
 from api.routers import lease as lease_router
@@ -14,6 +10,9 @@ from api.routers import report as report_router
 from api.routers import report_viewer as report_viewer_router
 from api.routers import tenant as tenant_router
 from api.routers import unit as unit_router
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 THIS_DIR = Path(__file__).parent
 

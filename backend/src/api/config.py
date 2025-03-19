@@ -18,7 +18,8 @@ class Settings(BaseSettings):
     """Application configuration settings.
 
     This class defines all configuration settings for the application,
-    with defaults and environmental variable overrides."""
+    with defaults and environmental variable overrides.
+    """
 
     app_name: str = "Property Management API"
     app_description: str = "API for managing properties, units, tenants, and payments"
@@ -141,9 +142,13 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     """Return cached settings instance.
 
-    Returns:
+    This function loads the application settings from environment variables
+    and caches the result for performance. It also looks for a .env file
+    in the parent directory of the application.
 
-        Settings: Application settings"""
+    Returns:
+        Settings: Application settings object with configuration values.
+    """
     # Look for the .env file in the parent directory
     env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), ".env")
     return Settings(_env_file=env_path)
