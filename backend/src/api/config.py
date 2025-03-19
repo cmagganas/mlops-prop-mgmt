@@ -40,15 +40,14 @@ class Settings(BaseSettings):
 
     # URLs
     api_url: str = Field(default="http://localhost:8000", description="API URL")
-    frontend_url: str = Field(default="http://localhost:3000", description="Frontend URL")
+    frontend_url: str = Field(default="http://localhost:8000", description="Frontend URL")
     redirect_uri: str = Field(default="http://localhost:8000/auth/callback", description="OAuth2 callback URL")
 
     # Security
     cookie_secure: bool = Field(default=False, description="Set cookies as secure (HTTPS only)")
 
     model_config = {
-        # "env_file": ".env",
-        "env_prefix": "REACT_APP_",  # PROPMGMT_DEBUG, PROPMGMT_HOST, etc.
+        "env_prefix": "REACT_APP_",
     }
 
     @property

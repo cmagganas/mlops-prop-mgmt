@@ -1,0 +1,9 @@
+steps:
+  - uses: actions/checkout@v2
+  - uses: actions/setup-python@v2
+    with:
+      python-version: "3.11"
+  - name: Create venv
+    run: python -m venv venv
+  - name: Install dependencies
+    run: source venv/bin/activate && pip install -e ".[test]"

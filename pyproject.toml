@@ -7,7 +7,7 @@ name = "mlops-prop-mgmt"
 description = "Property Management Platform for tracking tenants, properties, payments, and expenses"
 authors = [{ name = "Christos", email = "cmagganas@gmail.com" }]
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 license = { text = "MIT" }
 dependencies = [
     # Core framework and API
@@ -35,7 +35,7 @@ version = { file = "version.txt" }
 # Authentication and authorization
 auth = [
     "python-jose[cryptography]>=3.3.0",
-    "authlib>=1.5.0",
+    "authlib==1.5.0",
     "passlib>=1.7.4",
 ]
 
@@ -97,7 +97,8 @@ requires = ["setuptools>=61.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["backend"]
+packages = ["backend", "backend.src", "backend.src.api"]
+package-dir = {"" = "."}
 
 # include more than only .py files in the distribution package (wheel)
 [tool.setuptools.package-data]

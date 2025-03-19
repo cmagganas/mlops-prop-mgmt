@@ -125,8 +125,6 @@ celerybeat.pid
 
 # Environments
 .env
-.venv
-env/
 venv/
 ENV/
 env.bak/
@@ -179,4 +177,4 @@ dist
 lester_lease_generator/*
 
 # frontend node_modules
-frontend/node_modules/*
+frontend/node_modules/
