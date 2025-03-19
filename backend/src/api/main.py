@@ -3,15 +3,15 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .config import settings
-from .routers import auth as auth_router
-from .routers import lease as lease_router
-from .routers import payment as payment_router
-from .routers import property as property_router
-from .routers import report as report_router
-from .routers import report_viewer as report_viewer_router
-from .routers import tenant as tenant_router
-from .routers import unit as unit_router
+from api.config import settings
+from api.routers import auth as auth_router
+from api.routers import lease as lease_router
+from api.routers import payment as payment_router
+from api.routers import property as property_router
+from api.routers import report as report_router
+from api.routers import report_viewer as report_viewer_router
+from api.routers import tenant as tenant_router
+from api.routers import unit as unit_router
 
 
 @asynccontextmanager
