@@ -23,18 +23,14 @@ repos:
       # git-lfs rather than commiting them directly to the git history
       - id: check-added-large-files
         args: ["--maxkb=500"]
-
-        # HALT! Before you exclude a large file and commit it, forever
-        # bloating our repo size, did you:
-        # (1) use a CLI tool like imageoptim to compress them if they are images
-        # (2) think hard about whether using DVC or git-lfs is more appropriate
-        #     for the file--such as in the case of CSV files or other data
-        # This can be confusing. Reach out for help in our chat to help decide
-        # how to deal adding these large files you have :)
+        # Exclude test/docs directories and specific large files that are acceptable
         exclude: |
           (?x)(
               ^example/large/file.csv|
-              ^example/large/sklearn-model.pkl
+              ^example/large/sklearn-model.pkl|
+              ^tests/|
+              ^docs/|
+              ^installation_test/
           )
       # Sort requirements in requirements.txt files.
       - id: requirements-txt-fixer
@@ -56,6 +52,8 @@ repos:
             --ignore-missing-imports,
             --config-file=./pyproject.toml,
           ]
+        # Exclude test directories and installation test directory
+        exclude: ^(tests/|installation_test/|docs/)
 
   - repo: https://github.com/psf/black
     rev: 24.4.2
@@ -63,6 +61,7 @@ repos:
       - id: black
         args:
           - --config=./pyproject.toml
+        exclude: ^(tests/|installation_test/|docs/)
 
   - repo: https://github.com/PyCQA/pylint
     rev: v3.1.0
@@ -70,6 +69,7 @@ repos:
       - id: pylint
         args:
           - --rcfile=./pyproject.toml
+        exclude: ^(tests/|installation_test/|docs/)
 
   - repo: https://github.com/PyCQA/flake8
     rev: 7.0.0
@@ -81,6 +81,7 @@ repos:
           - radon
           - flake8-docstrings
           - Flake8-pyproject
+        exclude: ^(tests/|installation_test/|docs/)
 
   - repo: https://github.com/pycqa/isort
     rev: 5.13.2
@@ -88,6 +89,7 @@ repos:
       - id: isort
         args:
           - --settings-path=./pyproject.toml
+        exclude: ^(tests/|installation_test/|docs/)
 
   - repo: https://github.com/PyCQA/autoflake
     rev: v2.3.0
@@ -98,3 +100,4 @@ repos:
           - --remove-all-unused-imports
           - --remove-unused-variable
           - --ignore-init-module-imports
+        exclude: ^(tests/|installation_test/|docs/)

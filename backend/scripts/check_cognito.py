@@ -21,14 +21,15 @@ def main():
     print(f"  Client ID: {settings.cognito_client_id}")
     print(f"  Domain: {settings.cognito_domain}")
     print(f"  Scopes: {settings.cognito_scopes_list}")
-    
+
     print("\nGenerated URLs:")
     print(f"  Domain URL: {settings.cognito_domain_url}")
     print(f"  Auth Endpoint: {settings.cognito_auth_endpoint}")
     print(f"  Token Endpoint: {settings.cognito_token_endpoint}")
     print(f"  JWKS URI: {settings.cognito_jwks_uri}")
-    
+
     return 0
+
 
 if __name__ == "__main__":
     env_file = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
@@ -37,5 +38,5 @@ if __name__ == "__main__":
         print(f".env file found at {env_file}")
     else:
         print(f"WARNING: .env file not found at {env_file}")
-    
-    sys.exit(main()) 
+
+    sys.exit(main())

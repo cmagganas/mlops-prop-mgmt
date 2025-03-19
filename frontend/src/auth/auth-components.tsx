@@ -5,8 +5,8 @@ import { PropertyManagementConfig } from '../config';
 // Simple login button that uses the cognitoAuth implementation
 export const LoginButton = ({ label = 'Sign in', className = '' }: { label?: string, className?: string }) => {
   return (
-    <button 
-      className={`login-button ${className}`} 
+    <button
+      className={`login-button ${className}`}
       onClick={() => signInWithCognito()}
       style={{
         padding: '0.5rem 1rem',
@@ -26,8 +26,8 @@ export const LoginButton = ({ label = 'Sign in', className = '' }: { label?: str
 // Simple logout button
 export const LogoutButton = ({ label = 'Sign out', className = '' }: { label?: string, className?: string }) => {
   return (
-    <button 
-      className={`logout-button ${className}`} 
+    <button
+      className={`logout-button ${className}`}
       onClick={() => signOut()}
       style={{
         padding: '0.5rem 1rem',
@@ -57,7 +57,7 @@ export const useAuth = () => {
       try {
         const authenticated = await isAuthenticated();
         const user = authenticated ? await getCurrentUser() : null;
-        
+
         setAuthStatus({
           isAuthenticated: authenticated,
           isLoading: false,
@@ -87,4 +87,4 @@ export const initializeAuth = (config: PropertyManagementConfig) => {
   } catch (error) {
     console.error('Failed to initialize AWS Amplify authentication:', error);
   }
-}; 
+};

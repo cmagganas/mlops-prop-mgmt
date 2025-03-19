@@ -21,7 +21,7 @@ export const checkAuthentication = async (): Promise<boolean> => {
     const response = await fetch(`${API_URL}/auth/user`, {
       credentials: 'include', // Important for cookies to be sent
     });
-    
+
     if (response.ok) {
       return true;
     }
@@ -40,7 +40,7 @@ export const getCurrentUser = async () => {
     const response = await fetch(`${API_URL}/auth/user`, {
       credentials: 'include', // Important for cookies to be sent
     });
-    
+
     if (response.ok) {
       return await response.json();
     }
@@ -56,4 +56,4 @@ export const getCurrentUser = async () => {
  */
 export const signOut = () => {
   window.location.href = `${API_URL}/auth/logout`;
-}; 
+};

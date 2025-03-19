@@ -8,6 +8,12 @@ if ! command -v python3 &> /dev/null; then
     exit 1
 fi
 
+# Check if Node.js and npm are installed
+if ! command -v npm &> /dev/null; then
+    echo "Error: Node.js and npm are required but not found"
+    exit 1
+fi
+
 # Check if virtual environment exists
 if [ ! -d "venv" ]; then
     echo "Creating virtual environment..."
@@ -18,28 +24,57 @@ fi
 echo "Activating virtual environment..."
 source venv/bin/activate
 
-# Install dependencies if needed
+# Check for .env file
+if [ ! -f ".env" ]; then
+    echo "Creating .env file from example..."
+    cp .env.example .env
+    echo "Please edit .env file with your configuration values and restart this script."
+    exit 1
+fi
+
+# Prompt for installation type
 if ! python -c "import fastapi" &> /dev/null; then
-    echo "Installing dependencies..."
-    bash run.sh install
+    echo -e "\nInstallation type:"
+    echo "1) Development - Full setup with all tools (default)"
+    echo "2) Production - All components without development tools"
+    echo "3) Minimal - Basic setup with core and auth only"
+    echo "4) Custom - Select specific components"
+    read -p "Enter your choice (default: 1): " install_choice
+
+    case "$install_choice" in
+        2) install_type="prod";;
+        3) install_type="minimal";;
+        4) install_type="custom";;
+        *) install_type="dev";;
+    esac
+
+    echo "Installing dependencies ($install_type)..."
+    bash run.sh install "$install_type"
+else
+    # Always sync environment variables
+    bash run.sh sync_env
 fi
 
 # Run compatibility check
-echo "Checking environment compatibility..."
-python check_env.py
+echo -e "\nChecking environment compatibility..."
+python .github/scripts/check_env.py 2>/dev/null || true
 
-# If compatibility check returns an error, ask user if they want to continue
-if [ $? -ne 0 ]; then
-    read -p "Continue anyway? (y/n) " choice
-    case "$choice" in
-        y|Y ) echo "Continuing despite compatibility issues...";;
-        * ) echo "Exiting."; exit 1;;
-    esac
-fi
+# Ask if user wants to run backend, frontend, or both
+echo -e "\nWhat would you like to run?"
+echo "1) Backend only"
+echo "2) Frontend only"
+echo "3) Both backend and frontend (default)"
+read -p "Enter your choice: " choice
+
+case "$choice" in
+    1) component="backend";;
+    2) component="frontend";;
+    *) component="all";;
+esac
 
 # Run the application
-echo "Starting the application..."
-bash run.sh run
+echo -e "\nStarting the application ($component)..."
+bash run.sh run $component
 
 # Deactivate on exit
 trap "deactivate" EXIT

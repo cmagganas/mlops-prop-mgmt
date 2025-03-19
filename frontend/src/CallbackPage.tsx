@@ -24,7 +24,7 @@ const CallbackPage: React.FC = () => {
         await Auth.currentSession();
         setStatus('success');
         setMessage('Authentication successful! Redirecting to dashboard...');
-        
+
         // Redirect to the home page after successful authentication
         setTimeout(() => {
           window.location.href = '/';
@@ -40,30 +40,30 @@ const CallbackPage: React.FC = () => {
   }, []);
 
   return (
-    <div style={{ 
-      padding: '2rem', 
+    <div style={{
+      padding: '2rem',
       textAlign: 'center',
       maxWidth: '600px',
       margin: '0 auto',
       marginTop: '100px'
     }}>
       <h1>Property Management System</h1>
-      
-      <div style={{ 
+
+      <div style={{
         padding: '2rem',
-        backgroundColor: status === 'loading' ? '#f8f9fa' : 
+        backgroundColor: status === 'loading' ? '#f8f9fa' :
                         status === 'success' ? '#d4edda' : '#f8d7da',
         borderRadius: '8px',
         marginTop: '2rem',
-        color: status === 'loading' ? '#212529' : 
+        color: status === 'loading' ? '#212529' :
               status === 'success' ? '#155724' : '#721c24'
       }}>
         <h2>
-          {status === 'loading' ? 'Processing...' : 
+          {status === 'loading' ? 'Processing...' :
            status === 'success' ? 'Success!' : 'Error'}
         </h2>
         <p>{message}</p>
-        
+
         {status === 'error' && (
           <button
             onClick={() => window.location.href = '/'}
@@ -86,4 +86,4 @@ const CallbackPage: React.FC = () => {
   );
 };
 
-export default CallbackPage; 
+export default CallbackPage;

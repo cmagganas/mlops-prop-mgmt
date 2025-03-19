@@ -1,3 +1,4 @@
+import os
 from functools import lru_cache
 from typing import (
     List,
@@ -143,7 +144,9 @@ def get_settings() -> Settings:
     Returns:
 
         Settings: Application settings"""
-    return Settings()
+    # Look for the .env file in the parent directory
+    env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), '.env')
+    return Settings(_env_file=env_path)
 
 
 # For backward compatibility

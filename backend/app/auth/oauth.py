@@ -16,9 +16,9 @@ from ..config import settings
 
 class OAuth2ClientSingleton:
     """Singleton class for OAuth2 client to ensure only one instance is created."""
-    
+
     _instance = None
-    
+
     @classmethod
     def get_instance(cls) -> AsyncOAuth2Client:
         """Get or create the OAuth2 client instance."""
@@ -34,7 +34,7 @@ class OAuth2ClientSingleton:
 
 async def get_oauth_client() -> AsyncOAuth2Client:
     """Get the OAuth2 client.
-    
+
     Returns:
         AsyncOAuth2Client: Configured OAuth client
     """
@@ -43,12 +43,12 @@ async def get_oauth_client() -> AsyncOAuth2Client:
 
 async def get_authorization_url() -> str:
     """Generate the authorization URL for Cognito.
-    
+
     Returns:
         str: The authorization URL to redirect users
     """
-    client = await get_oauth_client()
-    
+    await get_oauth_client()
+
     # Build the authorization URL with the auth endpoint
     auth_url = f"{settings.cognito_auth_endpoint}?response_type=code"
     return auth_url
@@ -56,11 +56,11 @@ async def get_authorization_url() -> str:
 
 async def fetch_token(code: str, request: Request) -> Dict:
     """Exchange authorization code for tokens.
-    
+
     Args:
         code: The authorization code from Cognito redirect
         request: The FastAPI request
-    
+
     Returns:
         Dict: The token response from Cognito
     """
@@ -76,25 +76,25 @@ async def fetch_token(code: str, request: Request) -> Dict:
 
 async def get_userinfo(token: Optional[Dict] = None, access_token: Optional[str] = None) -> Dict:
     """Fetch user information from Cognito using the userinfo endpoint.
-    
+
     Args:
         token: The full token response (containing access_token)
         access_token: The access token directly, if token is not provided
-    
+
     Returns:
         Dict: User information from Cognito
     """
     client = await get_oauth_client()
-    
+
     if token:
         client.token = token
     elif access_token:
         client.token = {"access_token": access_token}
     else:
         raise ValueError("Either token or access_token must be provided")
-    
+
     # Standard OpenID Connect userinfo endpoint
     userinfo_endpoint = f"{settings.cognito_domain_url}/oauth2/userInfo"
     resp = await client.get(userinfo_endpoint)
     resp.raise_for_status()
-    return resp.json() 
+    return resp.json()

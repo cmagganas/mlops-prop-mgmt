@@ -1,23 +1,22 @@
 # Property Management System
 
-A FastAPI-based application for managing properties, units, tenants, and financial reports.
+A FastAPI and React-based application for managing properties, units, tenants, and financial reports.
 
 ## Recent Updates
 
+- **Modular Dependencies**: Restructured project with component-based dependency management
+- **Unified Installation Process**: Simplified setup for both backend and frontend components
+- **Consolidated Environment Configuration**: Single .env file for all settings
 - **HTML Report Viewer**: Added a user-friendly web interface for visualizing financial reports
-- **Simplified Setup**: Created startup scripts and improved documentation for easier onboarding
-- **Test Improvements**: Fixed test configuration to skip auth-related tests for now
-- **Environment Configuration**: Added sample .env file and configuration structure
-- **Architecture Documentation**: Added comprehensive architecture overview
-- **Compatibility Checks**: Added environment compatibility verification script
-- **Enhanced Documentation**: Added comprehensive API and implementation documentation
+- **AWS Cognito Authentication**: Secure authentication flow using Cognito and JWT tokens
 
-This project now provides both API endpoints and HTML visualizations for property management data, with a focus on financial reporting. The system maintains data on properties, units, tenants, leases, and payments, generating various financial reports that can be viewed through either JSON API responses or the HTML report viewer.
+This project provides both API endpoints and HTML visualizations for property management data, with a focus on financial reporting. The system maintains data on properties, units, tenants, leases, and payments, generating various financial reports that can be viewed through either JSON API responses or the HTML report viewer.
 
 ## Setup
 
 ### Prerequisites
 - Python 3.7 or higher (Python 3.10-3.11 recommended for best compatibility with all tools)
+- Node.js and npm for the frontend React application
 - Make (optional, for using make commands)
 
 **Note on Python 3.12**: While the application should run with Python 3.12, some development tools might have compatibility issues. If you experience pre-commit or other development tool errors, consider using Python 3.11.
@@ -47,18 +46,84 @@ This will verify your Python version, check for key dependencies, and validate O
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 
-3. Install the package with development dependencies:
+3. Set up environment variables:
+   ```bash
+   cp .env.example .env
+   # Edit .env to add your configuration values
+   ```
+
+4. Install dependencies:
+
+   **Default (Full Development Setup)**:
    ```bash
    make install
    # OR
    bash run.sh install
-   # OR
-   pip install -e ".[dev]"
    ```
 
-4. Set up pre-commit hooks:
+   **Installation Options**:
    ```bash
-   pre-commit install
+   # View all installation options
+   make install-help
+   # OR
+   bash run.sh install_help
+
+   # Production dependencies (no dev tools)
+   make install-prod
+   # OR
+   bash run.sh install prod
+
+   # Minimal installation (core + auth only)
+   make install-minimal
+   # OR
+   bash run.sh install minimal
+
+   # Custom component selection
+   make install-custom
+   # OR
+   bash run.sh install custom  # Interactive prompt
+   # OR
+   bash run.sh install "auth,database,aws"  # Specify components directly
+   ```
+
+   **Component Options**:
+   - `auth`: Authentication and security components
+   - `database`: Database and ORM components
+   - `aws`: AWS integration services
+   - `http-client`: HTTP client utilities
+   - `test`: Testing libraries
+   - `static-code-qa`: Code quality and linting tools
+   - `release`: Build and release tools
+
+All installation options will:
+- Install selected Python backend dependencies
+- Install frontend Node.js dependencies
+- Sync environment variables between root and frontend directories
+- Set up pre-commit hooks (for dev installation)
+
+### Running the Application
+
+You can run different components of the application:
+
+1. Run the backend only:
+   ```bash
+   make run-backend
+   # OR
+   bash run.sh run backend
+   ```
+
+2. Run the frontend only:
+   ```bash
+   make run-frontend
+   # OR
+   bash run.sh run frontend
+   ```
+
+3. Run both backend and frontend:
+   ```bash
+   make run-all
+   # OR
+   bash run.sh run all
    ```
 
 ### Quick Start
@@ -76,21 +141,13 @@ This script will:
 - Check environment compatibility
 - Start the application
 
-### Running the Application
+## Access Points
 
-Run the application using:
-
-```bash
-make run
-# OR
-bash run.sh run
-# OR
-python -m uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-The API will be available at:
-- API Docs: http://localhost:8000/docs
-- HTML Report Viewer: http://localhost:8000/report-viewer/
+Once running, the application is available at:
+- Backend API: http://localhost:8000
+  - API Docs: http://localhost:8000/docs
+  - HTML Report Viewer: http://localhost:8000/report-viewer/
+- Frontend App: http://localhost:3000
 
 ## Viewing the HTML Reports
 
