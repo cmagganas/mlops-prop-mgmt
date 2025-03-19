@@ -12,7 +12,7 @@ A FastAPI and React-based application for managing properties, units, tenants, a
 
 ## Prerequisites
 
-- Python 3.11+ 
+- Python 3.11+
 - AWS Cognito User Pool configured with:
   - App Client with hosted UI
   - Callback URL: `http://localhost:8000/auth/callback`
