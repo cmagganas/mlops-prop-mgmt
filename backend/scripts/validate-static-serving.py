@@ -8,17 +8,16 @@ This script:
 4. Validates that static files are served correctly with the stage prefix
 """
 
+import argparse
 import os
+import shutil
 import sys
 import tempfile
-import shutil
+import threading
 import webbrowser
 from pathlib import Path
-import time
-import threading
+
 import uvicorn
-import contextlib
-import argparse
 
 # Parse command line arguments
 parser = argparse.ArgumentParser(description="Validate static file serving in Lambda environment")
@@ -48,12 +47,14 @@ os.environ["REACT_APP_REDIRECT_URI"] = "http://localhost:8000/auth/callback"
 os.environ["TESTING"] = "true"
 os.environ["REACT_APP_DEBUG"] = "true"
 
+
 # Create test assets
 def create_test_files():
     """Create test HTML and asset files."""
     # Create index.html
     with open(static_dir / "index.html", "w") as f:
-        f.write("""<!DOCTYPE html>
+        f.write(
+            """<!DOCTYPE html>
 <html>
 <head>
     <title>Lambda Static File Test</title>
@@ -73,12 +74,14 @@ def create_test_files():
     </div>
 </body>
 </html>
-""")
-    
+"""
+        )
+
     # Create CSS directory and file
     os.makedirs(static_dir / "css", exist_ok=True)
     with open(static_dir / "css" / "styles.css", "w") as f:
-        f.write("""
+        f.write(
+            """
 body {
     font-family: Arial, sans-serif;
     margin: 40px;
@@ -127,21 +130,23 @@ button {
     background-color: #f8f9fa;
     border-radius: 4px;
 }
-""")
-    
+"""
+        )
+
     # Create JS directory and file
     os.makedirs(static_dir / "js", exist_ok=True)
     with open(static_dir / "js" / "app.js", "w") as f:
-        f.write("""
+        f.write(
+            """
 document.addEventListener('DOMContentLoaded', function() {
     const statusDiv = document.getElementById('status');
     const resultsDiv = document.getElementById('results');
-    
+
     // Check if CSS was loaded properly
     const isCssLoaded = Array.from(document.styleSheets).some(sheet => {
         return sheet.href && sheet.href.includes('/css/styles.css');
     });
-    
+
     if (isCssLoaded) {
         statusDiv.textContent = 'CSS loaded successfully!';
         statusDiv.classList.add('success');
@@ -149,7 +154,7 @@ document.addEventListener('DOMContentLoaded', function() {
         statusDiv.textContent = 'CSS failed to load properly';
         statusDiv.classList.add('error');
     }
-    
+
     // Add info about environment
     resultsDiv.innerHTML = `
         <h3>Environment Info:</h3>
@@ -162,14 +167,14 @@ CSS URL: ${Array.from(document.styleSheets).map(s => s.href).join('\\n        ')
 JS Path: ${document.currentScript ? document.currentScript.src : 'unknown'}
         </pre>
     `;
-    
+
     console.log('Script loaded successfully');
 });
 
 function testFetch(url) {
     const resultsDiv = document.getElementById('results');
     resultsDiv.innerHTML += `<p>Fetching: ${url}...</p>`;
-    
+
     fetch(url)
         .then(response => response.json())
         .then(data => {
@@ -179,14 +184,17 @@ function testFetch(url) {
             resultsDiv.innerHTML += `<p class="error">Error: ${error.message}</p>`;
         });
 }
-""")
+"""
+        )
+
 
 def start_server(port):
     """Start a FastAPI server with our application."""
     # Import our app only after setting up the environment
     from api.main import create_app
+
     app = create_app()
-    
+
     print(f"Starting test server on http://localhost:{port}")
     print("The server is configured to simulate Lambda environment")
     print(f"- Running with AWS_LAMBDA_FUNCTION_NAME={os.environ.get('AWS_LAMBDA_FUNCTION_NAME')}")
@@ -199,49 +207,59 @@ def start_server(port):
     print("3. API endpoint access with and without stage prefix")
     print()
     print("Press Ctrl+C to stop the server and clean up")
-    
+
     # Open browser if requested
     if args.open_browser:
         threading.Timer(1.5, lambda: webbrowser.open(f"http://localhost:{port}")).start()
-    
+
     # Start the server
     uvicorn.run(app, host="127.0.0.1", port=port)
+
 
 def cleanup():
     """Clean up temporary files and environment variables."""
     shutil.rmtree(temp_dir, ignore_errors=True)
     # Remove environment variables we set
-    for var in ["AWS_LAMBDA_FUNCTION_NAME", "REACT_APP_COGNITO_REGION", "REACT_APP_COGNITO_USER_POOL_ID", 
-                "REACT_APP_COGNITO_CLIENT_ID", "REACT_APP_COGNITO_CLIENT_SECRET", 
-                "REACT_APP_REDIRECT_URI", "TESTING", "REACT_APP_DEBUG"]:
+    for var in [
+        "AWS_LAMBDA_FUNCTION_NAME",
+        "REACT_APP_COGNITO_REGION",
+        "REACT_APP_COGNITO_USER_POOL_ID",
+        "REACT_APP_COGNITO_CLIENT_ID",
+        "REACT_APP_COGNITO_CLIENT_SECRET",
+        "REACT_APP_REDIRECT_URI",
+        "TESTING",
+        "REACT_APP_DEBUG",
+    ]:
         os.environ.pop(var, None)
     print("\nCleanup completed. Temporary files and environment variables removed.")
+
 
 # Main execution
 try:
     print("Setting up test environment...")
     create_test_files()
-    
+
     # Print test instructions
-    print("\n" + "="*50)
+    print("\n" + "=" * 50)
     print("TEST VALIDATION INSTRUCTIONS:")
-    print("="*50)
+    print("=" * 50)
     print("1. Open http://localhost:8000 in your browser")
     print("2. Verify the page loads with proper styling (CSS is working)")
     print("3. Verify the JavaScript status shows 'CSS loaded successfully!'")
     print("4. Test API endpoints with both buttons")
     print("5. Check browser developer tools (Network tab) for any 404 errors")
     print("6. Inspect CSS and JS links in browser dev tools to confirm path structure")
-    print("="*50 + "\n")
-    
+    print("=" * 50 + "\n")
+
     # Start the server
     start_server(args.port)
-    
+
 except KeyboardInterrupt:
     print("\nTest server stopped by user.")
 except Exception as e:
     print(f"\nAn error occurred: {str(e)}")
     import traceback
+
     traceback.print_exc()
 finally:
-    cleanup() 
+    cleanup()

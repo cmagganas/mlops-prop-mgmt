@@ -13,15 +13,9 @@ app = create_app()
 
 # Create the Lambda handler using Mangum
 # Configure Mangum to properly handle API Gateway stage name
-# - strip_base_path=False: Don't strip the base path (API Gateway stage name)
 # - lifespan="off": Disable lifespan events for better Lambda compatibility
 # - api_gateway_base_path="prod": The API Gateway stage name
-handler = Mangum(
-    app, 
-    lifespan="off",
-    api_gateway_base_path="prod",
-    strip_base_path=False
-)
+handler = Mangum(app, lifespan="off", api_gateway_base_path="prod")
 
 # For testing purposes only - will be removed in production
 if __name__ == "__main__":
