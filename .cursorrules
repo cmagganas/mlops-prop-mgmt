@@ -116,8 +116,6 @@ The state of the code at this point includes
     - 3. Config files, e.g. JSON, YAML, TOML
     - 4. Defaults, constant or derived values in code (lowest precedence)
 
-## Beyond this course
-
 - [ ] Decide if authentication is needed--prefer keeping it out of the application and using a reverse proxy or API Gateway to handle authentication
 - [ ] Support authorization within the application, e.g. using OAuth 2.0 JWT scopes
 - [ ] Support multitenancy
