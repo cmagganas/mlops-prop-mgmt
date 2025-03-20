@@ -14,10 +14,12 @@ Usage:
 import argparse
 import os
 import shutil
+import sys
 import tempfile
 import threading
 import traceback
 import webbrowser
+from pathlib import Path
 
 import uvicorn
 
@@ -160,15 +162,41 @@ def start_server(port: int) -> None:
     print("\nPress Ctrl+C to stop the server")
     print("-" * 60 + "\n")
 
+    # Add backend/src directory to sys.path
+    script_dir = Path(__file__).parent
+    backend_src_dir = script_dir.parent / "backend" / "src"
+    if backend_src_dir.exists():
+        sys.path.append(str(backend_src_dir))
+    else:
+        backend_src_dir = script_dir.parent / "backend"
+        if backend_src_dir.exists():
+            sys.path.append(str(backend_src_dir))
+    
+    print(f"Looking for API module in: {backend_src_dir}")
+    print(f"Python path: {sys.path}")
+
     # Import FastAPI application
     try:
-        from api.main import create_app
+        # Try importing from backend module structure first
+        try:
+            from api.main import create_app
+        except ImportError:
+            # Fall back to backend.api module structure
+            from backend.api.main import create_app
+        
         app = create_app()
         uvicorn.run(app, host="0.0.0.0", port=port)
     except ImportError:
         print("ERROR: Could not import the FastAPI application.")
         print("Make sure the backend/src directory is in your PYTHONPATH.")
         print("Try running this script from the project root directory.")
+        print(f"Current directory: {os.getcwd()}")
+        print("Checking for possible module paths:")
+        for path in sys.path:
+            if os.path.exists(os.path.join(path, "api")):
+                print(f"  Found 'api' in {path}")
+            if os.path.exists(os.path.join(path, "backend")):
+                print(f"  Found 'backend' in {path}")
         raise
 
 
