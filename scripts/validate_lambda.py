@@ -148,6 +148,35 @@ document.addEventListener('DOMContentLoaded', function() {
         """.strip())
 
 
+def setup_environment(temp_dir: str) -> None:
+    """Set up environment variables for the test."""
+    # Set AWS environment variables
+    os.environ["AWS_REGION"] = "us-west-1"
+    os.environ["AWS_ACCESS_KEY_ID"] = "mock-access-key"
+    os.environ["AWS_SECRET_ACCESS_KEY"] = "mock-secret-key"
+    os.environ["AWS_SESSION_TOKEN"] = "mock-session-token"
+    os.environ["STATIC_FILES_DIR"] = temp_dir
+    
+    # Set Cognito environment variables
+    os.environ["REACT_APP_COGNITO_REGION"] = "us-west-1"
+    os.environ["REACT_APP_COGNITO_USER_POOL_ID"] = "us-west-1_mockpool"
+    os.environ["REACT_APP_COGNITO_CLIENT_ID"] = "mock-client-id"
+    os.environ["REACT_APP_COGNITO_CLIENT_SECRET"] = "mock-client-secret"
+    os.environ["REACT_APP_REDIRECT_URI"] = f"http://localhost:8000/auth/callback"
+    os.environ["REACT_APP_DEBUG"] = "true"
+    
+    # Print environment variables for debugging
+    print("\nEnvironment Variables:")
+    for key, value in sorted(
+        [(k, v) for k, v in os.environ.items() if k.startswith(("AWS_", "REACT_APP_", "STATIC_"))],
+        key=lambda x: x[0]
+    ):
+        if "SECRET" in key or "KEY" in key:
+            print(f"  {key}=***REDACTED***")
+        else:
+            print(f"  {key}={value}")
+
+
 def start_server(port: int) -> None:
     """Start the FastAPI server in simulation mode."""
     print("\n" + "-" * 60)
@@ -207,7 +236,10 @@ def cleanup(temp_dir: str) -> None:
     # Reset environment variables
     for var in [
         "AWS_REGION", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY",
-        "AWS_SESSION_TOKEN", "STATIC_FILES_DIR"
+        "AWS_SESSION_TOKEN", "STATIC_FILES_DIR", 
+        "REACT_APP_COGNITO_REGION", "REACT_APP_COGNITO_USER_POOL_ID",
+        "REACT_APP_COGNITO_CLIENT_ID", "REACT_APP_COGNITO_CLIENT_SECRET",
+        "REACT_APP_REDIRECT_URI", "REACT_APP_DEBUG"
     ]:
         if var in os.environ:
             del os.environ[var]
@@ -232,12 +264,8 @@ def main() -> None:
     temp_dir = tempfile.mkdtemp()
     
     try:
-        # Set environment variables to simulate Lambda
-        os.environ["AWS_REGION"] = "us-west-1"
-        os.environ["AWS_ACCESS_KEY_ID"] = "mock-access-key"
-        os.environ["AWS_SECRET_ACCESS_KEY"] = "mock-secret-key"
-        os.environ["AWS_SESSION_TOKEN"] = "mock-session-token"
-        os.environ["STATIC_FILES_DIR"] = temp_dir
+        # Set up environment variables
+        setup_environment(temp_dir)
         
         # Create test files
         create_test_files(temp_dir)
