@@ -182,3 +182,7 @@ frontend/node_modules/
 # secrets
 secrets/
 secrets/*
+
+# Lambda deployment packages
+lambda.zip
+lambda-layer.zip
