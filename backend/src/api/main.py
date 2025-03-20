@@ -1,3 +1,4 @@
+import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -12,9 +13,13 @@ from api.routers import tenant as tenant_router
 from api.routers import unit as unit_router
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 THIS_DIR = Path(__file__).parent
+
+# Determine if running in Lambda
+is_lambda = os.environ.get("AWS_LAMBDA_FUNCTION_NAME") is not None
 
 
 @asynccontextmanager
@@ -36,8 +41,8 @@ def create_app() -> FastAPI:
     by separating app creation from running the server.
 
     Returns:
-
-        A configured FastAPI application"""
+        A configured FastAPI application
+    """
     app = FastAPI(
         title=settings.app_name,
         description=settings.app_description,
@@ -65,17 +70,52 @@ def create_app() -> FastAPI:
     app.include_router(report_viewer_router.router)
 
     # Root endpoint with health check
-    @app.get("/healthz", tags=["health"])
+    @app.get("/healthz", tags=["health"], operation_id="health_check")
     async def health_check() -> dict:
         """Check API health status."""
         return {"status": "healthy", "message": f"{settings.app_name} is running"}
 
-    built_fontend_dir = THIS_DIR / "static"
-    app.mount(
-        "/",
-        StaticFiles(directory=str(built_fontend_dir), html=True),
-        name="frontend",
-    )
+    # Path to built frontend files
+    built_frontend_dir = THIS_DIR / "static"
+
+    # Configure static file serving based on environment
+    if is_lambda:
+        # Mount static files at /static
+        app.mount(
+            "/static",
+            StaticFiles(directory=str(built_frontend_dir / "static")),
+            name="static",
+        )
+
+        # Mount the root HTML at /
+        @app.get("/", tags=["frontend"], operation_id="serve_index")
+        async def serve_index():
+            """Serve the index.html file."""
+            index_path = built_frontend_dir / "index.html"
+            if index_path.exists():
+                with open(index_path, "r") as f:
+                    content = f.read()
+                # Modify static file references to include the stage name
+                content = content.replace('src="/', 'src="/prod/')
+                content = content.replace('href="/', 'href="/prod/')
+                return HTMLResponse(content=content)
+
+    else:
+        # In local development, mount everything at / as before
+        app.mount(
+            "/",
+            StaticFiles(directory=str(built_frontend_dir), html=True),
+            name="frontend",
+        )
+
+    @app.get("/api/status", tags=["diagnostics"])
+    async def status():
+        """Return API status information."""
+        return {
+            "status": "ok",
+            "environment": "lambda" if is_lambda else "local",
+            "version": "0.1.0",  # Replace with your actual version
+        }
 
     return app
 
@@ -83,5 +123,4 @@ def create_app() -> FastAPI:
 if __name__ == "__main__":
     import uvicorn
 
-    app = create_app()
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run("api.main:create_app()", host="0.0.0.0", port=8000, reload=True)
