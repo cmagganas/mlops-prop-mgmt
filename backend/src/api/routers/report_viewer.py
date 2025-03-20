@@ -5,6 +5,7 @@ This module provides HTML-based visualization of report data."""
 import os
 import pathlib
 
+import jinja2
 from fastapi import (
     APIRouter,
     HTTPException,
@@ -16,13 +17,23 @@ from fastapi.templating import Jinja2Templates
 
 from ..db.report import report_service
 
-# Create the templates directory if it doesn't exist
+# Check if running in AWS Lambda
+is_lambda = os.environ.get("AWS_LAMBDA_FUNCTION_NAME") is not None
+
+# Create the templates directory - use /tmp in Lambda environment
 file_path = pathlib.Path(__file__)
-templates_dir = file_path.parent.parent / "templates"
+if is_lambda:
+    templates_dir = pathlib.Path("/tmp/templates")
+else:
+    templates_dir = file_path.parent.parent / "templates"
+
 os.makedirs(templates_dir, exist_ok=True)
 
+# Path to the report template
+report_template_path = templates_dir / "report.html"
+
 # Create a basic HTML template for reports
-report_template = """<!DOCTYPE html>.
+report_template = """<!DOCTYPE html>
 <html>
 <head>
     <title>{{ title }}</title>
@@ -101,11 +112,11 @@ report_template = """<!DOCTYPE html>.
 </head>
 <body>
     <div class="report-nav">
-        <a href="/report-viewer/">Reports Home</a>
-        <a href="/report-viewer/property">All Properties</a>
-        <a href="/report-viewer/property/1">Property #1</a>
-        <a href="/report-viewer/unit/1">Unit #1</a>
-        <a href="/report-viewer/tenant/1">Tenant #1</a>
+        <a href="{{ base_url }}/report-viewer/">Reports Home</a>
+        <a href="{{ base_url }}/report-viewer/property">All Properties</a>
+        <a href="{{ base_url }}/report-viewer/property/1">Property #1</a>
+        <a href="{{ base_url }}/report-viewer/unit/1">Unit #1</a>
+        <a href="{{ base_url }}/report-viewer/tenant/1">Tenant #1</a>
     </div>
 
     <div class="report-header">
@@ -117,12 +128,27 @@ report_template = """<!DOCTYPE html>.
 </body>
 </html>"""
 
-# Write the template to a file
-with open(templates_dir / "report.html", "w") as f:
-    f.write(report_template)
+# Create Jinja2Templates instance
+try:
+    # First try to write the template file if it doesn't exist
+    if not report_template_path.exists():
+        with open(report_template_path, "w") as f:
+            f.write(report_template)
 
-# Create templates instance
-templates = Jinja2Templates(directory=str(templates_dir))
+    # Initialize with the directory
+    templates = Jinja2Templates(directory=str(templates_dir))
+
+except (OSError, IOError) as e:
+    # Fallback to in-memory template if file writing fails
+    print(f"Warning: Could not write template file: {e}")
+    print("Using in-memory template loader as fallback")
+
+    # Create an in-memory loader
+    loader = jinja2.DictLoader({"report.html": report_template})
+
+    # Create a custom Jinja2Templates instance with the in-memory loader
+    templates = Jinja2Templates(directory=str(templates_dir))
+    templates.env.loader = loader
 
 router = APIRouter(
     prefix="/report-viewer",
@@ -137,8 +163,17 @@ def format_currency(amount):
     return "${float(amount):,.2f}"
 
 
+def get_base_url():
+    """Get the base URL for API Gateway stage if in AWS Lambda environment."""
+    if is_lambda:
+        # When deployed to AWS Lambda with API Gateway, include the stage name
+        return "/prod"
+    return ""
+
+
 def render_tenant_report(report):
     """Render a tenant report as HTML."""
+    get_base_url()
     html = "<div class='card'>"
     html += "<h2>Tenant Information</h2>"
     html += f"<div class='summary-row'><span class='summary-label'>Tenant Name:</span> {report['tenant_name']}</div>"
@@ -183,6 +218,7 @@ def render_tenant_report(report):
 
 def render_unit_report(report):
     """Render a unit report as HTML."""
+    get_base_url()
     html = "<div class='card'>"
     html += "<h2>Unit Information</h2>"
     html += f"<div class='summary-row'><span class='summary-label'>Unit Name:</span> {report['unit_name']}</div>"
@@ -265,6 +301,7 @@ def render_unit_report(report):
 
 def render_property_report(report):
     """Render a property report as HTML."""
+    base_url = get_base_url()
     html = "<div class='card'>"
     html += "<h2>Property Information</h2>"
     html += (
@@ -303,7 +340,7 @@ def render_property_report(report):
         for unit in report["unit_balances"]:
             balance_class = "balance-positive" if unit["balance"] <= 0 else "balance-negative"
             html += "<tr>"
-            html += f"<td><a href='/report-viewer/unit/{unit['unit_id']}'>{unit['unit_name']}</a></td>"
+            html += f"<td><a href='{base_url}/report-viewer/unit/{unit['unit_id']}'>{unit['unit_name']}</a></td>"
             html += f"<td>{'Yes' if unit['occupied'] else 'No'}</td>"
             html += f"<td>{unit['tenant_count']}</td>"
             html += f"<td>{format_currency(unit['rent_amount'])}</td>"
@@ -320,6 +357,7 @@ def render_property_report(report):
 
 def render_all_properties_report(report):
     """Render an all properties report as HTML."""
+    base_url = get_base_url()
     html = "<div class='card'>"
     html += "<h2>All Properties Summary</h2>"
     html += f"<div class='summary-row'><span class='summary-label'>Report Date:</span> {report['report_date']}</div>"
@@ -351,7 +389,7 @@ def render_all_properties_report(report):
         for prop in report["property_summaries"]:
             balance_class = "balance-positive" if prop["balance"] <= 0 else "balance-negative"
             html += "<tr>"
-            html += f"<td><a href='/report-viewer/property/{prop['property_id']}'>{prop['name']}</a></td>"
+            html += f"<td><a href='{base_url}/report-viewer/property/{prop['property_id']}'>{prop['name']}</a></td>"
             html += f"<td>{prop['unit_count']}</td>"
             html += f"<td>{prop['occupied_units']}</td>"
             html += f"<td>{format_currency(prop['total_due'])}</td>"
@@ -368,16 +406,17 @@ def render_all_properties_report(report):
 @router.get("/", response_class=HTMLResponse)
 async def report_viewer_home(request: Request):
     """Display the report viewer home page."""
-    content = """<div class="card">.
+    base_url = get_base_url()
+    content = f"""<div class="card">.
         <h2>Property Management Report Viewer</h2>
         <p>Select a report type from the options below:</p>
 
         <h3>Available Reports</h3>
         <ul>
-            <li><a href="/report-viewer/property">All Properties Balance Report</a></li>
-            <li><a href="/report-viewer/property/1">Property #1 Balance Report</a></li>
-            <li><a href="/report-viewer/unit/1">Unit #1 Balance Report</a></li>
-            <li><a href="/report-viewer/tenant/1">Tenant #1 Balance Report</a></li>
+            <li><a href="{base_url}/report-viewer/property">All Properties Balance Report</a></li>
+            <li><a href="{base_url}/report-viewer/property/1">Property #1 Balance Report</a></li>
+            <li><a href="{base_url}/report-viewer/unit/1">Unit #1 Balance Report</a></li>
+            <li><a href="{base_url}/report-viewer/tenant/1">Tenant #1 Balance Report</a></li>
         </ul>
     </div>"""
 
@@ -388,6 +427,7 @@ async def report_viewer_home(request: Request):
             "title": "Property Management Reports",
             "description": "View financial reports for properties, units, and tenants",
             "content": content,
+            "base_url": base_url,
         },
     )
 
@@ -399,6 +439,7 @@ async def view_tenant_report(request: Request, tenant_id: int = Path(...)):
     Args:
 
         tenant_id: The ID of the tenant to generate a report for"""
+    base_url = get_base_url()
     report = report_service.generate_tenant_balance_report(tenant_id)
     if report is None:
         raise HTTPException(status_code=404, detail="Tenant not found")
@@ -416,6 +457,7 @@ async def view_tenant_report(request: Request, tenant_id: int = Path(...)):
             "title": f"Tenant Balance Report: {report_dict['tenant_name']}",
             "description": f"Financial report for tenant ID {tenant_id}",
             "content": content,
+            "base_url": base_url,
         },
     )
 
@@ -427,6 +469,7 @@ async def view_unit_report(request: Request, unit_id: int = Path(...)):
     Args:
 
         unit_id: The ID of the unit to generate a report for"""
+    base_url = get_base_url()
     report = report_service.generate_unit_balance_report(unit_id)
     if report is None:
         raise HTTPException(status_code=404, detail="Unit not found")
@@ -444,6 +487,7 @@ async def view_unit_report(request: Request, unit_id: int = Path(...)):
             "title": f"Unit Balance Report: {report_dict['unit_name']}",
             "description": f"Financial report for unit ID {unit_id}",
             "content": content,
+            "base_url": base_url,
         },
     )
 
@@ -455,6 +499,7 @@ async def view_property_report(request: Request, property_id: int = Path(...)):
     Args:
 
         property_id: The ID of the property to generate a report for"""
+    base_url = get_base_url()
     report = report_service.generate_property_balance_report(property_id)
     if report is None:
         raise HTTPException(status_code=404, detail="Property not found")
@@ -472,6 +517,7 @@ async def view_property_report(request: Request, property_id: int = Path(...)):
             "title": f"Property Balance Report: {report_dict['property_name']}",
             "description": f"Financial report for property ID {property_id}",
             "content": content,
+            "base_url": base_url,
         },
     )
 
@@ -479,6 +525,7 @@ async def view_property_report(request: Request, property_id: int = Path(...)):
 @router.get("/property", response_class=HTMLResponse)
 async def view_all_properties_report(request: Request):
     """Display an HTML report for all properties."""
+    base_url = get_base_url()
     report = report_service.generate_all_properties_balance_report()
 
     # Convert to dict for rendering
@@ -494,5 +541,6 @@ async def view_all_properties_report(request: Request):
             "title": "All Properties Balance Report",
             "description": "Financial summary for all properties",
             "content": content,
+            "base_url": base_url,
         },
     )
