@@ -1,0 +1,16 @@
+{
+  "backend_api_url": "https://kdm5sqbe9i.execute-api.us-west-1.amazonaws.com/prod",
+  "cognito_user_pool_id": "us-west-1_qVmAUrJJk",
+  "cognito_hosted_ui_app_client_id": "10smpn9r9o15r57u37lqchlahj",
+  "cognito_hosted_ui_app_client_allowed_scopes": [
+    "email",
+    "openid",
+    "profile"
+  ],
+  "cognito_hosted_ui_fqdn": "auth-mlops-prop-mgmt.auth.us-west-1.amazoncognito.com",
+  "cognito_user_pool_region": "us-west-1",
+  "cognito_hosted_ui_redirect_sign_in_url": "https://kdm5sqbe9i.execute-api.us-west-1.amazonaws.com/prod/auth/callback",
+  "cognito_hosted_ui_redirect_sign_out_url": "https://kdm5sqbe9i.execute-api.us-west-1.amazonaws.com/prod",
+  "cognito_sign_in_redirect_url": "https://kdm5sqbe9i.execute-api.us-west-1.amazonaws.com/prod/auth/callback",
+  "cognito_sign_out_redirect_url": "https://kdm5sqbe9i.execute-api.us-west-1.amazonaws.com/prod"
+}

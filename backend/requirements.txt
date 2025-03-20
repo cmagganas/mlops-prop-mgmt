@@ -1,12 +1,15 @@
-authlib>=1.5.0
-fastapi==0.110.0
-httpx>=0.25.0
-jinja2>=3.1.0
+# Core API dependencies - versions tested and working in Lambda
+fastapi==0.95.2
 mangum==0.17.0
-pydantic==2.7.1
-pydantic-settings>=2.2.0
-python-dotenv>=1.0.0
+pydantic==1.10.8
+starlette==0.27.0
+
+# Auth dependencies
 python-jose[cryptography]>=3.3.0
-python-multipart>=0.0.9
-uvicorn>=0.29.0
+python-multipart>=0.0.5
+httpx>=0.24.0
+
+# AWS dependencies
+boto3>=1.28.0
+
 # Add other dependencies your application needs 

@@ -1,77 +1,36 @@
-# Lambda Deployment Checklist and Troubleshooting Guide
+# Next Steps Checklist
 
-## Deployment Steps
+## Package and Deploy
+- [x] Fix incompatible package versions
+  - [x] Used compatible versions: FastAPI 0.95.2, Pydantic 1.10.8, Starlette 0.27.0
+- [x] Simplify the application structure
+  - [x] Removed excess code and consolidated deployment approach
+  - [x] Streamlined app structure for easier maintenance
+- [x] Verify Lambda deployment with API Gateway integration
+  - [x] Successfully packaged the application with required dependencies
+  - [x] Confirmed the Lambda function executes properly
+  - [x] Created and verified the API Gateway endpoints
 
-1. ✅ Create an `aws_lambda_handler.py` file that looks like this
+## Authentication Flow
+- [ ] Configure Cognito User Pool and App Client
+- [ ] Set up environment variables for Cognito integration
+- [ ] Test the authentication endpoints (/auth/test, /auth/login)
+- [ ] Verify token validation and protected routes
 
-```python
-from api.main import create_app
-from mangum import Mangum
+## Core Features
+- [ ] Implement Property Management features incrementally:
+  - [ ] Property and Unit management
+  - [ ] Tenant management
+  - [ ] Payment tracking
+  - [ ] Reporting functionality
 
-app = create_app()
-handler = Mangum(app)
-```
+## Optimization
+- [ ] Reduce the package size if needed
+- [ ] Set up proper logging
+- [ ] Configure monitoring and alerts
+- [ ] Implement CI/CD for automated deployments
 
-2. ✅ Package your code (including the handler) into a lambda function
-   - ✅ Created packaging scripts: `package-lambda-docker-fixed-arm64.sh` for ARM64 architecture
-   - ✅ Created `requirements.txt` for Lambda dependencies
-   - ✅ Created Lambda deployment packages:
-     - ✅ `lambda.zip` - Contains application code
-     - ✅ `lambda-layer.zip` - Contains dependencies
-
-3. ✅ Deploy the lambda function
-   - ✅ Create a new Lambda function in AWS console
-   - ✅ Upload the `lambda.zip` package to the Lambda function
-   - ✅ Create a Lambda layer from `lambda-layer.zip` and attach it to the function
-   - ✅ Configure the handler as `aws_lambda_handler.handler`
-   - ✅ Fixed "No module named 'pydantic_core._pydantic_core'" error by using the proper architecture-compatible packaging
-
-4. ✅ Set environment variables needed by the lambda function
-   - ✅ Copy environment variables from `.env` to Lambda environment variables
-
-5. ✅ Create an API Gateway and set it up to proxy all requests to the lambda function
-   - ✅ Create a new REST API in API Gateway
-   - ✅ Configure a proxy resource for all routes (`/{proxy+}`)
-   - ✅ Create a root resource with ANY method
-   - ✅ Connect it to the Lambda function
-   - ✅ Deploy the API to a stage (e.g., `prod`)
-
-6. ✅ Configure callback URLs
-   - ✅ Add the API Gateway URL as callback URL to Cognito
-   - ✅ Set it as an env var to the lambda function (`REDIRECT_URI`)
-
-7. ✅ Fix API Gateway stage name in URLs
-   - ✅ Added `get_base_url()` function to detect Lambda environment and include `/prod` stage name in all URLs
-   - ✅ Updated all template rendering to include base_url in generated links
-   - ✅ Created comprehensive README with deployment instructions and considerations
-
-8. ❌ Fix static file serving for frontend assets
-   - ❌ Update `main.py` to handle API Gateway stage name in static file paths
-   - ❌ Modify index.html serving to replace static asset URLs with stage-prefixed versions
-   - ❌ Re-deploy the Lambda package with updated code
-
-## Fixed Issues
-
-### 1. Architecture Mismatch in Lambda Layer
-Fixed by creating architecture-specific packaging scripts:
-- Used Docker to build dependencies for the correct architecture (ARM64)
-- Created proper Lambda layer with compatible binary dependencies
-
-### 2. Template Generation in Read-Only File System
-The Lambda environment has a read-only file system except for the `/tmp` directory. Fixed by:
-- Detecting when running in Lambda and using `/tmp/templates` for template storage
-- Adding fallback to in-memory template rendering if file operations fail
-- Properly handling errors during template generation
-
-### 3. Missing API Gateway Stage in URLs
-When deployed with API Gateway, all URLs must include the stage name (e.g., `/prod`):
-- Added a `get_base_url()` function that returns `/prod` when in Lambda environment
-- Updated all template rendering to include the stage name in all links
-- Created documentation about this consideration
-
-### 4. Static Asset Paths in Frontend
-Problem: Static assets (JS/CSS) are referenced with paths that don't include the API Gateway stage name
-Solution:
-- Mount static files separately at `/static` in the FastAPI app
-- Dynamically rewrite HTML content to include `/prod/` prefix in all asset URLs
-- Customize root endpoint to serve the modified HTML
+## Deployment Notes
+- Use the `package-lambda.sh` approach for future deployments
+- Remember to update environment variables for different environments
+- Current lambda_pkg.zip includes all necessary dependencies for the FastAPI application
