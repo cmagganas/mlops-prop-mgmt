@@ -9,7 +9,7 @@ from api.main import create_app
 from mangum import Mangum
 
 app = create_app()
-handler = Mangum(app)
+handler = Mangum(app, lifespan="off", api_gateway_base_path="prod", strip_base_path=False)
 ```
 
 2. ✅ Package your code (including the handler) into a lambda function
@@ -45,10 +45,38 @@ handler = Mangum(app)
    - ✅ Updated all template rendering to include base_url in generated links
    - ✅ Created comprehensive README with deployment instructions and considerations
 
-8. ❌ Fix static file serving for frontend assets
-   - ❌ Update `main.py` to handle API Gateway stage name in static file paths
-   - ❌ Modify index.html serving to replace static asset URLs with stage-prefixed versions
+8. ✅ Fix static file serving for frontend assets
+   - ✅ Updated `main.py` to handle API Gateway stage name in static file paths
+   - ✅ Modified index.html serving to replace static asset URLs with stage-prefixed versions
+   - ✅ Added dynamic path detection for static files
+   - ✅ Created update-lambda.sh script to deploy changes with test assets
    - ❌ Re-deploy the Lambda package with updated code
+
+## Next Steps
+1. ✅ Fix homepage with /prod/ prefix not working
+   - ✅ Updated Mangum configuration in `aws_lambda_handler.py` to properly handle API Gateway stage name
+   - ✅ Enhanced static file serving in `main.py` to handle both absolute and relative paths
+   - ✅ Added detailed error handling and debug information
+   - ✅ Created a test HTML page and assets for validation
+   - ✅ Created `validate-static-serving.py` script to test locally with mock Lambda environment
+   - ✅ Added AWS credential validation to deployment script
+   - ❌ Re-deploy the Lambda package with updated code
+
+2. ❌ Test static file serving changes:
+   - ✅ Created validation script (`validate-static-serving.py`) to test locally
+   - ✅ Added mock Cognito settings to validate without actual AWS dependencies
+   - ❌ Run update-lambda.sh script to deploy changes
+   - ❌ Access the API Gateway endpoint to verify root page loads correctly
+   - ❌ Verify static assets (CSS/JS) are loading with correct paths
+   - ❌ Check browser developer tools for any 404 errors on assets
+
+3. ❌ Test authentication flow with Cognito:
+   - ❌ Verify login redirect works correctly
+   - ❌ Verify callback handling and token storage
+   - ❌ Verify protected routes are accessible after login
+
+## Note: Environment Configuration Strategy
+Eventually, we'd like to be able to make changes in dev locally and prod with Lambda and API Gateway. Cognito may need two versions (dev and prod) with different callback URLs and configurations. This will require environment-specific settings and deployment processes.
 
 ## Fixed Issues
 
@@ -75,3 +103,13 @@ Solution:
 - Mount static files separately at `/static` in the FastAPI app
 - Dynamically rewrite HTML content to include `/prod/` prefix in all asset URLs
 - Customize root endpoint to serve the modified HTML
+- Added graceful error handling for missing files
+- Configured Mangum to properly handle API Gateway stage name
+- Created test assets for validation before deploying real frontend
+
+### 5. Cognito Configuration in Testing
+Problem: Running validation scripts locally fails due to missing Cognito configuration
+Solution:
+- Created mock Cognito settings for local testing
+- Added environment variables for required Cognito settings in validation script
+- Enhanced the deployment script to check for proper AWS credentials before deployment attempts
