@@ -85,30 +85,75 @@ make start-all
 5. Protected routes verify the JWT token on each request
 
 
-### Next steps
+## AWS Lambda Deployment
 
-1. Create an `index.py` or `aws_lambda_handler.py` file that looks like this
+### Prerequisites
 
-```python
-from api.main import create_app
-from mangum import Mangum
+- AWS Account with appropriate permissions
+- AWS CLI configured with your credentials
+- AWS Cognito User Pool configured with:
+  - App Client with hosted UI
+  - Callback URL to your API Gateway URL: `https://<api-id>.execute-api.<region>.amazonaws.com/prod/auth/callback`
+  - Sign-out URL to your API Gateway URL: `https://<api-id>.execute-api.<region>.amazonaws.com/prod`
 
-app = create_app()
-handler = Mangum(app)
-```
+### Deployment Steps
 
-2. Package your code (including the handler) into a lambda function. (layers, etc.) -- you'll have to install the dependencies, e.g. `pip install ...` pip install all the requirements
+1. **Build the frontend** (optional):
+   ```bash
+   cd frontend
+   npm install
+   npm run build
+   ```
 
-* Note: remember to include the bundled frontend files in the package (just use the `npm run build` command in the `bash run.sh build` command)
+2. **Deploy to Lambda**:
+   ```bash
+   # Basic deployment (code only)
+   ./scripts/lambda-deploy.sh
 
-3. Deploy the lambda function
+   # Deploy with a new Lambda layer
+   ./scripts/lambda-deploy.sh --package-layer
 
-4. Set all env vars needed by the lambda function (everthing in your .env file)
+   # Specify function name and region
+   ./scripts/lambda-deploy.sh --function-name my-lambda --region us-east-1
+   ```
 
-5. Create an API GW and set it up to proxy all requests to the lambda function. No need to configure any auth on this since the fastapi handler does all that with your /auth endpoints.
+3. **Validate locally**:
+   ```bash
+   # Test Lambda functionality in local environment
+   ./scripts/validate_lambda.py --open-browser
+   ```
 
-6. Take the URL of the API GW and put it in 2 places
+### Configuration
 
-  1. add it as callback URL to cognito
+The Lambda function requires the following environment variables:
 
-  2. as an env var to the lambda function (along with all the other env vars in the .env file)
+- `REACT_APP_COGNITO_REGION`: Your Cognito region
+- `REACT_APP_COGNITO_USER_POOL_ID`: Your Cognito User Pool ID
+- `REACT_APP_COGNITO_CLIENT_ID`: Your Cognito App Client ID
+- `REACT_APP_COGNITO_CLIENT_SECRET`: Your Cognito App Client Secret (if applicable)
+- `REACT_APP_REDIRECT_URI`: Your API Gateway callback URL
+
+### Script Overview
+
+- `scripts/lambda-deploy.sh`: Packages and deploys the application to AWS Lambda
+  - Handles AWS credentials automatically
+  - Includes frontend assets or creates test HTML if none exist
+  - Options to package dependencies as a Lambda layer
+
+- `scripts/validate_lambda.py`: Local testing script for Lambda functionality
+  - Simulates AWS Lambda environment
+  - Creates test static files
+  - Validates static file serving and API functionality
+
+- `scripts/auth/`: Authentication testing utilities
+  - `check_cognito.py`: Validates Cognito configuration
+  - `test_auth_flow.py`: Tests the complete authentication flow
+
+### Important Implementation Details
+
+- The AWS Lambda handler in `backend/src/aws_lambda_handler.py` configures Mangum to:
+  - Handle API Gateway stage prefix (`/prod`)
+  - Disable ASGI lifespan events for Lambda compatibility
+
+- Static files are served with proper API Gateway stage paths
+- Authentication handles redirects through the API Gateway stage
