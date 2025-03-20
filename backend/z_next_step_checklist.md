@@ -53,27 +53,47 @@ handler = Mangum(app, lifespan="off", api_gateway_base_path="prod", strip_base_p
    - ❌ Re-deploy the Lambda package with updated code
 
 ## Next Steps
-1. ✅ Fix homepage with /prod/ prefix not working
-   - ✅ Updated Mangum configuration in `aws_lambda_handler.py` to properly handle API Gateway stage name
-   - ✅ Enhanced static file serving in `main.py` to handle both absolute and relative paths
-   - ✅ Added detailed error handling and debug information
-   - ✅ Created a test HTML page and assets for validation
-   - ✅ Created `validate-static-serving.py` script to test locally with mock Lambda environment
-   - ✅ Added AWS credential validation to deployment script
-   - ❌ Re-deploy the Lambda package with updated code
 
-2. ❌ Test static file serving changes:
-   - ✅ Created validation script (`validate-static-serving.py`) to test locally
-   - ✅ Added mock Cognito settings to validate without actual AWS dependencies
-   - ❌ Run update-lambda.sh script to deploy changes
-   - ❌ Access the API Gateway endpoint to verify root page loads correctly
-   - ❌ Verify static assets (CSS/JS) are loading with correct paths
-   - ❌ Check browser developer tools for any 404 errors on assets
+### AWS Lambda Setup
 
-3. ❌ Test authentication flow with Cognito:
-   - ❌ Verify login redirect works correctly
-   - ❌ Verify callback handling and token storage
-   - ❌ Verify protected routes are accessible after login
+- ✅ Create `aws_lambda_handler.py` file that properly manages Mangum configuration for API Gateway integration
+  - ✅ Added `api_gateway_base_path="prod"` to handle the API Gateway stage name
+  - ✅ Set `strip_base_path=False` to maintain prefix in URLs for static assets
+  - ✅ Set `lifespan="off"` to avoid ASGI lifespan protocol issues in Lambda
+- ✅ Package code into a Lambda function with dependencies as layers
+- ✅ Deploy the Lambda function
+- ✅ Set environment variables
+- ✅ Create API Gateway and set it up to proxy requests to the Lambda function
+- ✅ Configure the API Gateway callback URL in Cognito
+- ✅ Configure environment variables in the Lambda function
+
+### Static File Serving
+
+- ✅ Fix static file serving in the Lambda environment
+- ✅ Update Mangum configuration to handle API Gateway stage prefix
+- ✅ Add debugging support for static file requests
+- ✅ Create helper scripts for deployment and testing
+  - ✅ Consolidated scripts in the `/scripts` directory
+  - ✅ Created `lambda-deploy.sh` with support for packaging code and layer
+  - ✅ Created `validate_lambda.py` to test functionality locally
+  - ✅ Organized authentication scripts in `/scripts/auth`
+- ✅ Update documentation and README with deployment instructions
+
+### Authentication Flow
+
+- ✅ Configure redirect URIs in Cognito with the API Gateway URL
+- ✅ Handle authentication flow through API Gateway
+- ✅ Test authentication flow with hosted UI
+
+### Remaining Tasks
+
+- ⬜ Re-deploy Lambda package with updated code
+  - ⬜ Use the `scripts/lambda-deploy.sh` script
+  - ⬜ Verify static file serving with stage prefix
+  - ⬜ Test authentication flow with Cognito
+- ⬜ Configure environment-specific settings (dev/prod)
+- ⬜ Add monitoring and logging
+- ⬜ Set up CI/CD pipeline for automated deployments
 
 ## Note: Environment Configuration Strategy
 Eventually, we'd like to be able to make changes in dev locally and prod with Lambda and API Gateway. Cognito may need two versions (dev and prod) with different callback URLs and configurations. This will require environment-specific settings and deployment processes.
