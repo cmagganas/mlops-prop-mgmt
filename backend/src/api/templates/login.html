@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Management - Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="card" style="max-width: 500px; margin: 100px auto;">
+            <div class="card-header">
+                <h2 class="text-center">Property Management System</h2>
+            </div>
+            <div class="card-body">
+                <h3 class="text-center mb-4">Login</h3>
+                <p class="text-center">Please log in to access the property management system.</p>
+                <div class="text-center mt-4">
+                    <a href="{{ login_url }}" class="btn btn-primary">Sign in with Cognito</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // If this is a redirect from Cognito, we'll have query parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const error = urlParams.get('error');
+        
+        if (error) {
+            // Display error message
+            const errorDiv = document.createElement('div');
+            errorDiv.style.color = 'red';
+            errorDiv.style.marginTop = '1rem';
+            errorDiv.textContent = `Error: ${error}`;
+            document.querySelector('.card-body').appendChild(errorDiv);
+        }
+        
+        // Automatic redirect to Cognito login if not showing an error
+        if (!error) {
+            setTimeout(() => {
+                window.location.href = "{{ login_url }}";
+            }, 1000);
+        }
+    </script>
+</body>
+</html> 

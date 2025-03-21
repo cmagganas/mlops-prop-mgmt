@@ -1,11 +1,24 @@
+import os
 import socket
 import traceback
+from pathlib import Path
 from typing import (
     Dict,
     Optional,
 )
 
 import httpx
+from api.auth.cognito import (
+    exchange_code_for_tokens,
+    get_cognito_auth,
+)
+from api.auth.jwt import get_current_user
+from api.auth.oauth import (
+    fetch_token,
+    get_authorization_url,
+    get_userinfo,
+)
+from api.config import settings
 from fastapi import (
     APIRouter,
     Depends,
@@ -13,21 +26,16 @@ from fastapi import (
     Request,
 )
 from fastapi.responses import (
+    HTMLResponse,
     JSONResponse,
     RedirectResponse,
 )
+from fastapi.templating import Jinja2Templates
 
-from ..auth.cognito import (
-    exchange_code_for_tokens,
-    get_cognito_auth,
-)
-from ..auth.jwt import get_current_user
-from ..auth.oauth import (
-    fetch_token,
-    get_authorization_url,
-    get_userinfo,
-)
-from ..config import settings
+# Check if running in Lambda
+IS_LAMBDA = os.environ.get("AWS_LAMBDA_FUNCTION_NAME") is not None
+# API Gateway stage name (typically 'prod' or 'dev')
+API_STAGE = os.environ.get("API_GATEWAY_STAGE", "prod")
 
 router = APIRouter(
     prefix="/auth",
@@ -35,12 +43,32 @@ router = APIRouter(
     responses={401: {"description": "Unauthorized"}},
 )
 
+templates = Jinja2Templates(directory=str(Path(__file__).parent.parent / "templates"))
+
+def get_url_with_stage(path: str) -> str:
+    """Add API Gateway stage to URL if in Lambda environment.
+    
+    Args:
+        path: The path to add the stage to
+        
+    Returns:
+        The path with the stage prefix if in Lambda, otherwise the path
+    """
+    if IS_LAMBDA and not path.startswith("/"):
+        path = f"/{path}"
+    
+    if IS_LAMBDA:
+        return f"/{API_STAGE}{path}"
+    
+    return path
 
 @router.get("/login")
 async def login():
     """Redirect to Cognito hosted UI for login."""
     auth = get_cognito_auth()
-    return RedirectResponse(url=auth.get_login_url())
+    login_url = auth.get_login_url()
+    print(f"Redirecting to Cognito login URL: {login_url}")
+    return RedirectResponse(url=login_url)
 
 
 @router.get("/login-authlib")
@@ -51,81 +79,105 @@ async def login_authlib():
 
 
 @router.get("/callback")
-async def callback(request: Request, code: str = None, error: str = None, error_description: str = None):
+async def callback(request: Request, code: Optional[str] = None, error: Optional[str] = None):
     """Handle the OAuth callback from Cognito."""
-    # Handle error response from Cognito
+    # If error is present in the query parameters, there was an issue with authentication
     if error:
-        error_msg = f"Authentication error: {error}"
-        if error_description:
-            error_msg += f" - {error_description}"
-        raise HTTPException(status_code=400, detail=error_msg)
+        error_message = f"Authentication error: {error}"
+        print(error_message)
+        return JSONResponse(
+            status_code=400,
+            content={"error": error_message},
+        )
 
-    # Ensure we have an authorization code
+    # If code is not present, redirect to login
     if not code:
-        raise HTTPException(status_code=400, detail="No authorization code provided")
+        print("No authorization code provided in callback. Redirecting to login.")
+        return RedirectResponse(url="/login")
 
     try:
-        # Log which approach we're using
-        use_authlib = request.query_params.get("use_authlib", "false").lower() == "true"
-
-        if use_authlib:
-            print("Debug - Using Authlib to exchange token")
-            # Use authlib to exchange the code
-            tokens = await fetch_token(code, request)
-
-            # Try to get user info
-            user_info = await get_userinfo(token=tokens)
-            print(f"Debug - User info: {user_info}")
-        else:
-            # Use existing implementation
-            print(f"Debug - Received authorization code: {code[:10]}...")
-            tokens = await exchange_code_for_tokens(code)
-
-        # Set tokens in httpOnly cookies
-        response = RedirectResponse(url=settings.frontend_url)
+        # Exchange the authorization code for tokens
+        print(f"Exchanging authorization code for tokens: {code[:10]}...")
+        tokens = await exchange_code_for_tokens(auth_code=code)
+        
+        # Extract tokens
+        id_token = tokens.get("id_token")
+        access_token = tokens.get("access_token")
+        refresh_token = tokens.get("refresh_token")
+        
+        if not id_token:
+            raise HTTPException(status_code=400, detail="No ID token returned from Cognito")
+            
+        # Redirect to the dashboard with tokens in secure cookies
+        dashboard_url = "/dashboard"
+        print(f"Authentication successful. Redirecting to dashboard: {dashboard_url}")
+        response = RedirectResponse(url=dashboard_url)
+        
+        # Set secure HTTP-only cookies
+        max_age = 3600  # 1 hour
         response.set_cookie(
-            key="id_token", value=tokens["id_token"], httponly=True, secure=settings.cookie_secure, samesite="lax"
+            key="id_token",
+            value=id_token,
+            httponly=True,
+            secure=IS_LAMBDA,  # Only set as secure in Lambda/production
+            samesite="lax",  # Changed from strict to lax for cross-domain redirects
+            max_age=max_age,
         )
+        
+        if access_token:
+            response.set_cookie(
+                key="access_token",
+                value=access_token,
+                httponly=True,
+                secure=IS_LAMBDA,
+                samesite="lax",
+                max_age=max_age,
+            )
+            
+        if refresh_token:
+            response.set_cookie(
+                key="refresh_token",
+                value=refresh_token,
+                httponly=True,
+                secure=IS_LAMBDA,
+                samesite="lax",
+                max_age=30 * 24 * 3600,  # 30 days
+            )
+            
         return response
+        
     except Exception as e:
-        error_detail = f"Error processing callback: {str(e)}"
-        print(f"Debug - Callback error: {error_detail}")
-        raise HTTPException(status_code=400, detail=error_detail) from e
+        error_details = traceback.format_exc()
+        print(f"Error in callback: {str(e)}\n{error_details}")
+        
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": f"Failed to complete authentication: {str(e)}",
+                "details": error_details if settings.debug else None,
+            }
+        )
 
 
 @router.get("/logout")
 async def logout():
-    """Log the user out by clearing cookies and redirecting to the frontend directly.
-
-    Implementation details:
-    1. Clears the id_token cookie which contains the JWT that authenticates the user
-    2. Redirects back to the frontend application
-
-    Note:
-    - We specifically avoid using Cognito's built-in logout endpoints (/logout or /oauth2/logout)
-      as they don't work consistently across different AWS Cognito configurations and versions.
-    - AWS Cognito lacks a standardized logout flow that works reliably across all setups.
-    - This approach is simpler and more reliable as it only depends on HTTP cookie mechanics
-      which are standardized across all browsers.
-    - When the frontend loads after logout, it will detect that no authentication cookie exists
-      and show the login UI.
-    """
-    # Clear the auth cookie and redirect to frontend
-    response = RedirectResponse(url=settings.frontend_url)
-    response.delete_cookie(key="id_token")
+    """Log out the user by clearing the auth cookies."""
+    login_url = "/login"
+    response = RedirectResponse(url=login_url)
+    
+    print(f"Logging out user. Redirecting to: {login_url}")
+    
+    # Clear all auth cookies
+    for cookie_name in ["id_token", "access_token", "refresh_token"]:
+        response.delete_cookie(cookie_name)
+        
     return response
 
 
 @router.get("/user")
-async def get_user_info(user: Dict = Depends(get_current_user)):
-    """Get information about the authenticated user."""
-    return {
-        "user_id": user.get("user_id"),
-        "email": user.get("email"),
-        "username": user.get("username"),
-        "name": user.get("name"),
-        "groups": user.get("groups", []),
-    }
+async def get_user(user: dict = Depends(get_current_user)):
+    """Return the current user's information."""
+    return user
 
 
 @router.get("/userinfo-authlib")
@@ -177,7 +229,6 @@ async def test_auth():
         "next_steps": [
             "1. Visit /auth/login to test the authentication flow",
             "2. After login, visit /auth/user to see your user information",
-            "3. Or try the Authlib version: /auth/login-authlib",
         ],
     }
 
@@ -190,6 +241,9 @@ async def debug_settings():
         "domain": settings.cognito_domain,
         "region": settings.cognito_region,
         "redirect_uri": settings.redirect_uri,
+        "is_lambda": IS_LAMBDA,
+        "api_stage": API_STAGE,
+        "root_path": settings.root_path,
         "has_client_secret": bool(settings.cognito_client_secret),
         "client_secret_prefix": settings.cognito_client_secret[:5] if settings.cognito_client_secret else None,
         "scopes": settings.cognito_scopes_list,
@@ -198,8 +252,12 @@ async def debug_settings():
         "logout_endpoint": settings.cognito_logout_endpoint,
         "jwks_uri": settings.cognito_jwks_uri,
         "domain_url": settings.cognito_domain_url,
-        "env_file": settings.model_config.get("env_file"),
-        "env_prefix": settings.model_config.get("env_prefix"),
+        "environment_info": {
+            "lambda_function_name": os.environ.get("AWS_LAMBDA_FUNCTION_NAME"),
+            "lambda_function_version": os.environ.get("AWS_LAMBDA_FUNCTION_VERSION"),
+            "region": os.environ.get("AWS_REGION"),
+            "api_id": os.environ.get("AWS_API_ID"),
+        }
     }
 
 
@@ -283,3 +341,18 @@ async def run_diagnostic():
         results["generated_urls"] = {"status": "error", "error": str(e)}
 
     return results
+
+
+@router.get("/login-page", response_class=HTMLResponse)
+async def login_page(request: Request):
+    """Render the login page with a 'Sign in with AWS Cognito' button."""
+    # Check if this is a Lambda environment
+    context = {"request": request}
+    
+    # If in Lambda, we need to use templates specific to API Gateway
+    if IS_LAMBDA:
+        # The login button in the template should include the API Gateway stage
+        context["api_stage"] = API_STAGE
+        print(f"Lambda environment detected, using API stage: {API_STAGE}")
+            
+    return templates.TemplateResponse("login.html", context)

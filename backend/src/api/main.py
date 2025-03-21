@@ -1,121 +1,122 @@
 import os
-from contextlib import asynccontextmanager
 from pathlib import Path
 
+from api.auth.jwt import get_current_user
+from api.auth.middleware import add_auth_middleware
 from api.config import settings
-from api.routers import auth as auth_router
-from api.routers import lease as lease_router
-from api.routers import payment as payment_router
-from api.routers import property as property_router
-from api.routers import report as report_router
-from api.routers import report_viewer as report_viewer_router
-from api.routers import tenant as tenant_router
-from api.routers import unit as unit_router
-from fastapi import FastAPI
+from api.routers import auth
+from fastapi import (
+    Depends,
+    FastAPI,
+    Request,
+)
+from fastapi.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import (
+    HTMLResponse,
+    RedirectResponse,
+)
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
-THIS_DIR = Path(__file__).parent
+# Directory paths
+BASE_DIR = Path(__file__).parent
+STATIC_DIR = BASE_DIR / "static"
+TEMPLATES_DIR = BASE_DIR / "templates"
 
-# Determine if running in Lambda
-is_lambda = os.environ.get("AWS_LAMBDA_FUNCTION_NAME") is not None
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Lifespan context manager for FastAPI.
-
-    Handles startup and shutdown events for the application."""
-    # Startup logic
-    print(f"Starting {settings.app_name} {settings.app_version}")
-    yield
-    # Shutdown logic
-    print(f"Shutting down {settings.app_name}")
-
+# Check if running in Lambda
+IS_LAMBDA = os.environ.get("AWS_LAMBDA_FUNCTION_NAME") is not None
+# API Gateway stage name (typically 'prod' or 'dev')
+API_STAGE = os.environ.get("API_GATEWAY_STAGE", "prod")
 
 def create_app() -> FastAPI:
-    """Create and configure the FastAPI application.
+    """Create and configure the FastAPI application."""
 
-    This factory function allows for easier testing and deployment
-    by separating app creation from running the server.
-
-    Returns:
-        A configured FastAPI application
-    """
     app = FastAPI(
-        title=settings.app_name,
-        description=settings.app_description,
-        version=settings.app_version,
-        lifespan=lifespan,
+        title="Property Management API",
+        description="API for property management system",
+        version="0.1.0",
+        root_path=settings.root_path,
     )
 
-    # Configure CORS
+    # Enable CORS
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[settings.frontend_url],
+        allow_origins=["*"],  # Adjust in production
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
 
-    # Register routers
-    app.include_router(auth_router.router)  # Add the auth router
-    app.include_router(property_router.router)
-    app.include_router(unit_router.router)
-    app.include_router(tenant_router.router)
-    app.include_router(lease_router.router)
-    app.include_router(payment_router.router)
-    app.include_router(report_router.router)
-    app.include_router(report_viewer_router.router)
+    # Add routers
+    app.include_router(auth.router)
 
-    # Root endpoint with health check
-    @app.get("/healthz", tags=["health"], operation_id="health_check")
-    async def health_check() -> dict:
-        """Check API health status."""
-        return {"status": "healthy", "message": f"{settings.app_name} is running"}
+    # Configure templates
+    templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
-    # Path to built frontend files
-    built_frontend_dir = THIS_DIR / "static"
+    # Mount static files - must be done before adding routes
+    app.mount(
+        "/static",
+        StaticFiles(directory=str(STATIC_DIR)),
+        name="static",
+    )
 
-    # Configure static file serving based on environment
-    if is_lambda:
-        # Mount static files at /static
-        app.mount(
-            "/static",
-            StaticFiles(directory=str(built_frontend_dir / "static")),
-            name="static",
+    # Define routes
+    @app.get("/", tags=["frontend"])
+    async def root():
+        """Redirect to login page."""
+        return RedirectResponse(url="/login")
+
+    @app.get("/login", tags=["auth"], response_class=HTMLResponse)
+    async def login_page(request: Request):
+        """Render the login page."""
+        login_url = f"{request.url_for('login')}"
+        context = {
+            "request": request,
+            "login_url": login_url,
+        }
+        return templates.TemplateResponse("login.html", context)
+
+    @app.get("/dashboard", tags=["frontend"], response_class=HTMLResponse)
+    async def dashboard(request: Request, user: dict = Depends(get_current_user)):
+        """Serve the dashboard for authenticated users."""
+        return templates.TemplateResponse(
+            "dashboard.html", 
+            {"request": request, "user": user}
         )
+    
+    @app.get("/logout", tags=["auth"])
+    async def logout(request: Request):
+        """Log out and redirect to login page."""
+        response = RedirectResponse(url="/login")
+        # Clear cookies
+        response.delete_cookie(key="access_token")
+        response.delete_cookie(key="id_token")
+        response.delete_cookie(key="refresh_token")
+        return response
 
-        # Mount the root HTML at /
-        @app.get("/", tags=["frontend"], operation_id="serve_index")
-        async def serve_index():
-            """Serve the index.html file."""
-            index_path = built_frontend_dir / "index.html"
-            if index_path.exists():
-                with open(index_path, "r") as f:
-                    content = f.read()
-                # Modify static file references to include the stage name
-                content = content.replace('src="/', 'src="/prod/')
-                content = content.replace('href="/', 'href="/prod/')
-                return HTMLResponse(content=content)
-
-    else:
-        # In local development, mount everything at / as before
-        app.mount(
-            "/",
-            StaticFiles(directory=str(built_frontend_dir), html=True),
-            name="frontend",
-        )
-
-    @app.get("/api/status", tags=["diagnostics"])
+    @app.get("/api/status", tags=["api"])
     async def status():
         """Return API status information."""
         return {
             "status": "ok",
-            "environment": "lambda" if is_lambda else "local",
-            "version": "0.1.0",  # Replace with your actual version
+            "version": "0.1.0",
+            "environment": "lambda" if IS_LAMBDA else "local",
         }
+
+    # Add custom exception handlers
+    @app.exception_handler(404)
+    async def not_found_exception_handler(request: Request, exc: HTTPException):
+        """Handle 404 errors gracefully."""
+        if request.url.path.startswith("/api/"):
+            # Return JSON for API routes
+            return {"error": "Resource not found", "path": request.url.path}
+        else:
+            # Redirect to login for frontend routes
+            return RedirectResponse(url="/login")
+
+    # Add the auth middleware
+    add_auth_middleware(app)
 
     return app
 

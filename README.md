@@ -84,8 +84,24 @@ make start-all
 4. The backend exchanges the authorization code for tokens and sets secure cookies
 5. Protected routes verify the JWT token on each request
 
+## Development and Deployment Status
 
-### Next steps
-1. Complete the static file serving fix in main.py as documented in the README
-2. Test with the updated Lambda deployment
-3. Configure and test the authentication flow with Cognito
+### Current State
+- Application runs in Lambda and redirects to login page
+- Authentication middleware correctly handles API Gateway stage paths
+- Fixed several issues with path handling in FastAPI routes
+
+### Known Issues
+- Lambda layer deployment may still have issues with empty ZIP files
+  - Consider using direct pip install rather than Docker approach
+  - Manual upload of lambda-layer.zip as temporary workaround
+- Need to ensure API Gateway has explicit resource for /login path
+- Test events may require source IP in requestContext for Lambda testing
+
+### Next Steps
+1. Complete API Gateway configuration:
+   - Add dedicated resource for /login (not using proxy)
+   - Redeploy API after configuration changes
+2. Test authentication flow end-to-end
+3. Implement remaining business features (tenant payment, expense tracking)
+4. Add proper error handling for production readiness

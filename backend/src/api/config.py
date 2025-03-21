@@ -1,3 +1,5 @@
+"""Configuration for the FastAPI application."""
+
 import os
 from functools import lru_cache
 from typing import (
@@ -6,12 +8,19 @@ from typing import (
 )
 
 from pydantic import (
+    AnyHttpUrl,
     Field,
     ValidationError,
     field_validator,
     model_validator,
 )
-from pydantic_settings import BaseSettings
+from pydantic_settings import (
+    BaseSettings,
+    SettingsConfigDict,
+)
+
+# API Gateway stage name
+API_STAGE = os.environ.get("API_GATEWAY_STAGE", "prod")
 
 
 class Settings(BaseSettings):
@@ -24,32 +33,39 @@ class Settings(BaseSettings):
     app_name: str = "Property Management API"
     app_description: str = "API for managing properties, units, tenants, and payments"
     app_version: str = "0.1.0"
-    debug: bool = Field(default=True, description="Run in debug mode")
+    debug: bool = False
     host: str = Field(default="0.0.0.0", description="Host to bind the API server")
     port: int = Field(default=8000, description="Port to bind the API server")
 
     # Auth settings
-    aws_region: str = Field(default="", description="AWS region")
-    cognito_region: str = Field(..., description="Cognito region")
-    cognito_user_pool_id: str = Field(..., description="Cognito User Pool ID")
-    cognito_client_id: str = Field(..., description="Cognito App Client ID")
-    cognito_client_secret: Optional[str] = Field(default=None, description="Cognito App Client Secret")
+    aws_region: str = Field("us-west-1", description="AWS region for services")
+    cognito_region: str = Field("us-west-1", description="AWS Cognito region")
+    cognito_user_pool_id: str = Field(..., description="Cognito user pool ID")
+    cognito_client_id: str = Field(..., description="Cognito client ID")
+    cognito_client_secret: Optional[str] = Field(None, description="Cognito client secret")
 
     # This should be ONLY the domain prefix (e.g., "mydomain"), not the full URL
-    cognito_domain: str = Field(default="", description="Cognito Domain or domain prefix")
-    cognito_scopes: str = Field(default="openid email profile", description="Space-separated OAuth scopes")
+    cognito_domain: str = Field(..., description="Cognito domain prefix")
+    cognito_scopes: str = Field("openid email profile", description="Space-separated list of OAuth scopes")
 
     # URLs
     api_url: str = Field(default="http://localhost:8000", description="API URL")
     frontend_url: str = Field(default="http://localhost:8000", description="Frontend URL")
-    redirect_uri: str = Field(default="http://localhost:8000/auth/callback", description="OAuth2 callback URL")
+    redirect_uri: str = Field(..., description="Redirect URI for OAuth callback")
 
     # Security
     cookie_secure: bool = Field(default=False, description="Set cookies as secure (HTTPS only)")
 
-    model_config = {
-        "env_prefix": "REACT_APP_",
-    }
+    # API Gateway settings
+    root_path: str = f"/{API_STAGE}"
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_prefix="app_",
+        case_sensitive=False,
+        extra="ignore",
+    )
 
     @property
     def cognito_scopes_list(self) -> List[str]:
@@ -99,7 +115,7 @@ class Settings(BaseSettings):
     @property
     def cognito_logout_endpoint(self) -> str:
         """Return the full Cognito logout endpoint URL."""
-        return f"{self.cognito_domain_url}/oauth2/logout"
+        return f"{self.cognito_domain_url}/logout"
 
     @property
     def cognito_jwks_uri(self) -> str:
