@@ -186,3 +186,7 @@ secrets/*
 # Lambda deployment packages
 lambda.zip
 lambda-layer.zip
+backend/lambda_pkg/*
+backend/lambda_pkg
+backend/lambda_pip/*
+backend/lambda_pip

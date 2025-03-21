@@ -86,7 +86,7 @@ This document provides step-by-step instructions for deploying the Property Mana
    ```bash
    API_ID=<your-api-id>
    PARENT_ID=$(aws apigateway get-resources --rest-api-id $API_ID --query 'items[0].id' --output text)
-   
+
    aws apigateway create-resource \
      --rest-api-id $API_ID \
      --parent-id $PARENT_ID \
@@ -96,13 +96,13 @@ This document provides step-by-step instructions for deploying the Property Mana
 3. Set up the ANY method and integrate with Lambda:
    ```bash
    RESOURCE_ID=$(aws apigateway get-resources --rest-api-id $API_ID --query 'items[?path==`/{proxy+}`].id' --output text)
-   
+
    aws apigateway put-method \
      --rest-api-id $API_ID \
      --resource-id $RESOURCE_ID \
      --http-method ANY \
      --authorization-type NONE
-   
+
    aws apigateway put-integration \
      --rest-api-id $API_ID \
      --resource-id $RESOURCE_ID \
@@ -165,4 +165,4 @@ aws logs filter-log-events \
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 - [AWS Lambda Documentation](https://docs.aws.amazon.com/lambda/)
 - [Amazon Cognito Documentation](https://docs.aws.amazon.com/cognito/)
-- [API Gateway Documentation](https://docs.aws.amazon.com/apigateway/) 
+- [API Gateway Documentation](https://docs.aws.amazon.com/apigateway/)

@@ -51,4 +51,4 @@ zip -r ../lambda_pkg.zip ./*
 cd ..
 
 echo "Created lambda_pkg.zip for deployment"
-echo "Handler: aws_lambda_handler.handler" 
+echo "Handler: aws_lambda_handler.handler"
